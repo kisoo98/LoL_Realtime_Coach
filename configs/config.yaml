@@ -1,0 +1,61 @@
+# LoL_Realtime_Coach 설정 파일
+# 해상도별 미니맵 좌표는 본인 환경에 맞게 조정하세요.
+
+app:
+  hotkey: "f9"
+  buffer_seconds: 60
+  loop_target_fps: 30
+  language: "ko"
+  debug_overlay: false
+  # 사용할 LLM 프로바이더: "gemini" (무료 티어) 또는 "grok"
+  llm_provider: "gemini"
+
+capture:
+  # 본인 모니터 해상도에 맞춰 active_resolution 만 바꾸면 됩니다.
+  active_resolution: "1920x1080"
+  resolutions:
+    "1920x1080":
+      minimap_bbox: [1625, 815, 1920, 1080]
+    "2560x1440":
+      minimap_bbox: [2170, 1090, 2560, 1440]
+    "3840x2160":
+      minimap_bbox: [3260, 1640, 3840, 2160]
+
+yolo:
+  model_path: "models/lol_minimap_yolo26n.pt"
+  conf_threshold: 0.35
+  iou_threshold: 0.5
+  device: "cpu"   # GPU 없으므로 CPU 모드 사용
+  classes:
+    - blue_top
+    - blue_jungle
+    - blue_mid
+    - blue_adc
+    - blue_support
+    - red_top
+    - red_jungle
+    - red_mid
+    - red_adc
+    - red_support
+    - ward
+    - objective
+
+grok:
+  base_url: "https://api.x.ai/v1"
+  model: "grok-4.20-vision"
+  max_tokens: 600
+  temperature: 0.4
+  timeout_seconds: 8
+
+gemini:
+  # 무료 티어 가능 모델 (2026 기준):
+  #   - "gemini-2.5-pro"    : 품질 최고, 무료 티어 rate limit 낮음
+  #   - "gemini-2.5-flash"  : 빠르고 무료 티어 여유 있음 (실시간 코칭에 추천)
+  model: "gemini-2.5-flash"
+  max_tokens: 600
+  temperature: 0.4
+  timeout_seconds: 15
+
+logging:
+  level: "INFO"
+  file: "logs/coach.log"

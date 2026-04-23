@@ -1,0 +1,48 @@
+# Environment
+.env
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.obsidian/
+
+# Build & Distribution
+build/
+dist/
+*.spec
+
+# Training pipeline (사용자 배포본에 불필요)
+training/
+data/
+models/
+runs/
+yolo_env/
+validation_results/
+
+# Planning documents (팀 내부용 — 외부 배포 금지)
+기획/
+
+# Large files
+*.zip
+*.7z
+*.pt
+*.onnx
+lol_data/
+
+# Logs & Temp
+logs/
+*.log
+temp/
+output/
+
+# OS
+.DS_Store
+Thumbs.db
