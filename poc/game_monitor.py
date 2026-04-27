@@ -13,6 +13,7 @@ game_monitor.py — 게임 감지 + 폴링 루프
 """
 
 import time
+import threading
 import requests
 import urllib3
 from datetime import datetime
@@ -163,6 +164,7 @@ def run(
     on_poll       = default_on_poll,
     on_game_end   = default_on_game_end,
     poll_interval: float = POLL_INTERVAL,
+    stop_event: threading.Event | None = None,
 ):
     """
     Args:
@@ -170,16 +172,26 @@ def run(
         on_poll       : 매 폴링마다 호출             → risk_engine 연결
         on_game_end   : 게임 종료 감지 시 1회 호출  → 한승우 연결
         poll_interval : 폴링 주기 (초)
+        stop_event    : threading.Event — set() 호출 시 루프 종료.
+                        None이면 Ctrl+C 전까지 무한 실행.
+
+    사용 예시 (외부에서 종료):
+        stop = threading.Event()
+        t = threading.Thread(target=run, kwargs={"stop_event": stop})
+        t.start()
+        # ... 나중에 종료할 때
+        stop.set()
+        t.join()
     """
     print("=" * 48)
     print("  LoL 게임 모니터 시작")
     print("  게임이 실행되면 자동으로 감지합니다...")
     print("=" * 48)
 
-    game_active    = False   # 현재 게임 진행 중 여부
-    match_info_sent = False  # 게임 시작 트리거를 이미 보냈는지
+    game_active     = False   # 현재 게임 진행 중 여부
+    match_info_sent = False   # 게임 시작 트리거를 이미 보냈는지
 
-    while True:
+    while not (stop_event and stop_event.is_set()):
         data = fetch_game_data()
 
         if data and is_game_running(data):
@@ -204,14 +216,62 @@ def run(
                 match_info_sent = False
                 on_game_end()
 
-        time.sleep(poll_interval)
+        # stop_event가 있으면 wait()로 대기 (즉시 깨울 수 있음)
+        # 없으면 기존대로 time.sleep()
+        if stop_event is not None:
+            stop_event.wait(timeout=poll_interval)
+        else:
+            time.sleep(poll_interval)
+
+    print("\n모니터 종료 (stop_event 감지)")
 
 
 # ──────────────────────────────────────────────
 # 직접 실행 시 테스트
 # ──────────────────────────────────────────────
 if __name__ == "__main__":
+    import threading
+    import keyboard
+
+    TOGGLE_HOTKEY = "ctrl+shift+z"  # 같은 키로 시작/중지 토글
+
+    _stop_event: threading.Event | None = None
+    _thread:     threading.Thread | None = None
+    _active      = False
+
+    def toggle_monitor():
+        global _stop_event, _thread, _active
+
+        if _active:
+            # ── 실행 중 → 중지
+            _stop_event.set()
+            _active = False
+            print(f"\n[{TOGGLE_HOTKEY.upper()}] 모니터 중지 — 다시 누르면 재시작")
+        else:
+            # ── 중지 중 → 시작
+            _stop_event = threading.Event()
+            _thread = threading.Thread(
+                target=run,
+                kwargs={"stop_event": _stop_event},
+                daemon=True,
+            )
+            _thread.start()
+            _active = True
+            print(f"\n[{TOGGLE_HOTKEY.upper()}] 모니터 시작 — 다시 누르면 중지")
+
+    keyboard.add_hotkey(TOGGLE_HOTKEY, toggle_monitor)
+    print(f"  [{TOGGLE_HOTKEY.upper()}] : 모니터 시작 / 중지 토글")
+    print(f"  Ctrl+C                  : 완전 종료")
+
+    # 첫 실행 시 자동 시작
+    toggle_monitor()
+
     try:
-        run()
+        while True:
+            time.sleep(0.5)        # 짧은 sleep 반복 — Ctrl+C 즉시 수신
     except KeyboardInterrupt:
-        print("\n모니터 종료 (Ctrl+C)")
+        if _stop_event:
+            _stop_event.set()
+        print("\n모니터 완전 종료")
+    finally:
+        keyboard.remove_hotkey(TOGGLE_HOTKEY)

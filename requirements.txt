@@ -1,12 +1,27 @@
-ultralytics>=8.3.0
-opencv-python>=4.10.0
-dxcam>=0.0.5
+# ── HTTP / 네트워크 ──────────────────────────────
+requests>=2.32.0
+urllib3>=2.2.0
+
+# ── 화면 캡처 ────────────────────────────────────
+dxcam>=0.0.5                          # 1순위 (Windows DirectX, 빠름)
+mss>=9.0.1                            # 2순위 폴백 (dxcam 없을 때)
+
+# ── AI / ML ──────────────────────────────────────
+ultralytics>=8.3.0                    # YOLO 탐지
+opencv-python>=4.10.0                 # 이미지 인코딩 (cv2)
 numpy>=1.26.0
-keyboard>=0.13.5
-openai>=1.40.0
-google-generativeai>=0.8.0
+
+# ── LLM 클라이언트 ───────────────────────────────
+openai>=1.40.0                        # Grok (xAI) 연동
+google-generativeai>=0.8.0            # Gemini 연동
+
+# ── 설정 / 유틸 ──────────────────────────────────
 pyyaml>=6.0
 pydantic>=2.7.0
 python-dotenv>=1.0.1
 loguru>=0.7.2
-win10toast>=0.9 ; platform_system == "Windows"
+keyboard>=0.13.5                      # 전역 단축키 (게임 풀스크린 중에도 동작)
+
+# ── 선택 의존성 ───────────────────────────────────
+psutil>=5.9.0                         # 게임 프로세스 감지 (없어도 API 폴백으로 동작)
+win10toast>=0.9 ; platform_system == "Windows"  # 토스트 알림
