@@ -1,0 +1,867 @@
+{
+  "poll_index": 15,
+  "collected_at": "2026-04-27T16:16:33.151602",
+  "activePlayer": {
+    "abilities": {
+      "E": {
+        "abilityLevel": 0,
+        "displayName": "찬란한 쇄도",
+        "id": "ZaahenE",
+        "rawDescription": "GeneratedTip_Spell_ZaahenE_Description",
+        "rawDisplayName": "GeneratedTip_Spell_ZaahenE_DisplayName"
+      },
+      "Passive": {
+        "displayName": "전쟁 단련",
+        "id": "ZaahenPassive",
+        "rawDescription": "GeneratedTip_Passive_ZaahenPassive_Description",
+        "rawDisplayName": "GeneratedTip_Passive_ZaahenPassive_DisplayName"
+      },
+      "Q": {
+        "abilityLevel": 0,
+        "displayName": "다르킨의 글레이브",
+        "id": "ZaahenQ",
+        "rawDescription": "GeneratedTip_Spell_ZaahenQ_Description",
+        "rawDisplayName": "GeneratedTip_Spell_ZaahenQ_DisplayName"
+      },
+      "R": {
+        "abilityLevel": 0,
+        "displayName": "단호한 판결",
+        "id": "ZaahenR",
+        "rawDescription": "GeneratedTip_Spell_ZaahenR_Description",
+        "rawDisplayName": "GeneratedTip_Spell_ZaahenR_DisplayName"
+      },
+      "W": {
+        "abilityLevel": 0,
+        "displayName": "공포의 귀환",
+        "id": "ZaahenW",
+        "rawDescription": "GeneratedTip_Spell_ZaahenW_Description",
+        "rawDisplayName": "GeneratedTip_Spell_ZaahenW_DisplayName"
+      }
+    },
+    "championStats": {
+      "abilityHaste": 0.0,
+      "abilityPower": 0.0,
+      "armor": 36.0,
+      "armorPenetrationFlat": 0.0,
+      "armorPenetrationPercent": 1.0,
+      "attackDamage": 73.80000305175781,
+      "attackRange": 175.0,
+      "attackSpeed": 0.625,
+      "bonusArmorPenetrationPercent": 1.0,
+      "bonusMagicPenetrationPercent": 1.0,
+      "critChance": 0.0,
+      "critDamage": 200.0,
+      "currentHealth": 650.0,
+      "healShieldPower": 0.0,
+      "healthRegenRate": 1.5,
+      "lifeSteal": 0.0,
+      "magicLethality": 0.0,
+      "magicPenetrationFlat": 0.0,
+      "magicPenetrationPercent": 1.0,
+      "magicResist": 32.0,
+      "maxHealth": 650.0,
+      "moveSpeed": 747.5,
+      "omnivamp": 0.0,
+      "physicalLethality": 0.0,
+      "physicalVamp": 0.0,
+      "resourceMax": 350.0,
+      "resourceRegenRate": 1.6299999952316284,
+      "resourceType": "MANA",
+      "resourceValue": 350.0,
+      "spellVamp": 0.0,
+      "tenacity": 5.0
+    },
+    "currentGold": 500.0,
+    "fullRunes": {
+      "generalRunes": [
+        {
+          "displayName": "난입",
+          "id": 8230,
+          "rawDescription": "perk_tooltip_PhaseRush",
+          "rawDisplayName": "perk_displayname_PhaseRush"
+        },
+        {
+          "displayName": "마나순환 팔찌",
+          "id": 8226,
+          "rawDescription": "perk_tooltip_8226",
+          "rawDisplayName": "perk_displayname_8226"
+        },
+        {
+          "displayName": "깨달음",
+          "id": 8210,
+          "rawDescription": "perk_tooltip_Transcendence",
+          "rawDisplayName": "perk_displayname_Transcendence"
+        },
+        {
+          "displayName": "주문 작열",
+          "id": 8237,
+          "rawDescription": "perk_tooltip_Scorch",
+          "rawDisplayName": "perk_displayname_Scorch"
+        },
+        {
+          "displayName": "비스킷 배달",
+          "id": 8345,
+          "rawDescription": "perk_tooltip_BiscuitDelivery",
+          "rawDisplayName": "perk_displayname_BiscuitDelivery"
+        },
+        {
+          "displayName": "마법의 신발",
+          "id": 8304,
+          "rawDescription": "perk_tooltip_MagicalFootwear",
+          "rawDisplayName": "perk_displayname_MagicalFootwear"
+        }
+      ],
+      "keystone": {
+        "displayName": "난입",
+        "id": 8230,
+        "rawDescription": "perk_tooltip_PhaseRush",
+        "rawDisplayName": "perk_displayname_PhaseRush"
+      },
+      "primaryRuneTree": {
+        "displayName": "마법",
+        "id": 8200,
+        "rawDescription": "perkstyle_tooltip_7202",
+        "rawDisplayName": "perkstyle_displayname_7202"
+      },
+      "secondaryRuneTree": {
+        "displayName": "영감",
+        "id": 8300,
+        "rawDescription": "perkstyle_tooltip_7203",
+        "rawDisplayName": "perkstyle_displayname_7203"
+      },
+      "statRunes": [
+        {
+          "id": 5008,
+          "rawDescription": "perk_tooltip_StatModAdaptive"
+        },
+        {
+          "id": 5008,
+          "rawDescription": "perk_tooltip_StatModAdaptive"
+        },
+        {
+          "id": 5001,
+          "rawDescription": "perk_tooltip_StatModHealthScaling"
+        }
+      ]
+    },
+    "level": 1,
+    "riotId": "챙 렬#KR1",
+    "riotIdGameName": "챙 렬",
+    "riotIdTagLine": "KR1",
+    "summonerName": "챙 렬#KR1",
+    "teamRelativeColors": true
+  },
+  "allPlayers": [
+    {
+      "championName": "자헨",
+      "isBot": false,
+      "isDead": false,
+      "items": [],
+      "level": 1,
+      "position": "NONE",
+      "rawChampionName": "game_character_displayname_Zaahen",
+      "rawSkinName": "game_character_displayname_Zaahen",
+      "respawnTimer": 0.0,
+      "riotId": "챙 렬#KR1",
+      "riotIdGameName": "챙 렬",
+      "riotIdTagLine": "KR1",
+      "runes": {
+        "keystone": {
+          "displayName": "난입",
+          "id": 8230,
+          "rawDescription": "perk_tooltip_PhaseRush",
+          "rawDisplayName": "perk_displayname_PhaseRush"
+        },
+        "primaryRuneTree": {
+          "displayName": "마법",
+          "id": 8200,
+          "rawDescription": "perkstyle_tooltip_7202",
+          "rawDisplayName": "perkstyle_displayname_7202"
+        },
+        "secondaryRuneTree": {
+          "displayName": "영감",
+          "id": 8300,
+          "rawDescription": "perkstyle_tooltip_7203",
+          "rawDisplayName": "perkstyle_displayname_7203"
+        }
+      },
+      "scores": {
+        "assists": 0,
+        "creepScore": 0,
+        "deaths": 0,
+        "kills": 0,
+        "wardScore": 0.0
+      },
+      "skinID": 0,
+      "skinName": "자헨",
+      "summonerName": "챙 렬#KR1",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "점화",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerDot_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerDot_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "점멸",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerFlash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+        }
+      },
+      "team": "ORDER"
+    },
+    {
+      "championName": "카서스",
+      "isBot": true,
+      "isDead": false,
+      "items": [
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "도란의 반지",
+          "itemID": 1056,
+          "price": 400,
+          "rawDescription": "GeneratedTip_Item_1056_Description",
+          "rawDisplayName": "Item_1056_Name",
+          "slot": 0
+        },
+        {
+          "canUse": true,
+          "consumable": true,
+          "count": 2,
+          "displayName": "체력 물약",
+          "itemID": 2003,
+          "price": 50,
+          "rawDescription": "GeneratedTip_Item_2003_Description",
+          "rawDisplayName": "Item_2003_Name",
+          "slot": 1
+        },
+        {
+          "canUse": true,
+          "consumable": false,
+          "count": 1,
+          "displayName": "투명 와드",
+          "itemID": 3340,
+          "price": 0,
+          "rawDescription": "GeneratedTip_Item_3340_Description",
+          "rawDisplayName": "Item_3340_Name",
+          "slot": 6
+        }
+      ],
+      "level": 1,
+      "position": "BOTTOM",
+      "rawChampionName": "game_character_displayname_Karthus",
+      "rawSkinName": "game_character_displayname_Karthus",
+      "respawnTimer": 0.0,
+      "riotId": "Karthus#BOT",
+      "riotIdGameName": "Karthus",
+      "riotIdTagLine": "BOT",
+      "runes": {
+        "keystone": {
+          "displayName": "신비로운 유성",
+          "id": 8229,
+          "rawDescription": "perk_tooltip_ArcaneComet",
+          "rawDisplayName": "perk_displayname_ArcaneComet"
+        },
+        "primaryRuneTree": {
+          "displayName": "마법",
+          "id": 8200,
+          "rawDescription": "perkstyle_tooltip_7202",
+          "rawDisplayName": "perkstyle_displayname_7202"
+        },
+        "secondaryRuneTree": {
+          "displayName": "지배",
+          "id": 8100,
+          "rawDescription": "perkstyle_tooltip_7200",
+          "rawDisplayName": "perkstyle_displayname_7200"
+        }
+      },
+      "scores": {
+        "assists": 0,
+        "creepScore": 0,
+        "deaths": 0,
+        "kills": 0,
+        "wardScore": 0.0
+      },
+      "skinID": 0,
+      "skinName": "카서스",
+      "summonerName": "카서스 봇",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "탈진",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerExhaust_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerExhaust_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "점멸",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerFlash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+        }
+      },
+      "team": "ORDER"
+    },
+    {
+      "championName": "마오카이",
+      "isBot": true,
+      "isDead": false,
+      "items": [
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "새끼 이끼쿵쿵이",
+          "itemID": 1103,
+          "price": 450,
+          "rawDescription": "GeneratedTip_Item_1103_Description",
+          "rawDisplayName": "Item_1103_Name",
+          "slot": 0
+        },
+        {
+          "canUse": true,
+          "consumable": false,
+          "count": 1,
+          "displayName": "투명 와드",
+          "itemID": 3340,
+          "price": 0,
+          "rawDescription": "GeneratedTip_Item_3340_Description",
+          "rawDisplayName": "Item_3340_Name",
+          "slot": 6
+        }
+      ],
+      "level": 1,
+      "position": "JUNGLE",
+      "rawChampionName": "game_character_displayname_Maokai",
+      "rawSkinName": "game_character_displayname_Maokai",
+      "respawnTimer": 0.0,
+      "riotId": "Maokai#BOT",
+      "riotIdGameName": "Maokai",
+      "riotIdTagLine": "BOT",
+      "runes": {
+        "keystone": {
+          "displayName": "착취의 손아귀",
+          "id": 8437,
+          "rawDescription": "perk_tooltip_GraspOfTheUndying",
+          "rawDisplayName": "perk_displayname_GraspOfTheUndying"
+        },
+        "primaryRuneTree": {
+          "displayName": "결의",
+          "id": 8400,
+          "rawDescription": "perkstyle_tooltip_7204",
+          "rawDisplayName": "perkstyle_displayname_7204"
+        },
+        "secondaryRuneTree": {
+          "displayName": "마법",
+          "id": 8200,
+          "rawDescription": "perkstyle_tooltip_7202",
+          "rawDisplayName": "perkstyle_displayname_7202"
+        }
+      },
+      "scores": {
+        "assists": 0,
+        "creepScore": 0,
+        "deaths": 0,
+        "kills": 0,
+        "wardScore": 0.0
+      },
+      "skinID": 0,
+      "skinName": "마오카이",
+      "summonerName": "마오카이 봇",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "점멸",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerFlash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "강타",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerSmite_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerSmite_DisplayName"
+        }
+      },
+      "team": "ORDER"
+    },
+    {
+      "championName": "마오카이",
+      "isBot": true,
+      "isDead": false,
+      "items": [
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "도란의 반지",
+          "itemID": 1056,
+          "price": 400,
+          "rawDescription": "GeneratedTip_Item_1056_Description",
+          "rawDisplayName": "Item_1056_Name",
+          "slot": 0
+        },
+        {
+          "canUse": true,
+          "consumable": true,
+          "count": 2,
+          "displayName": "체력 물약",
+          "itemID": 2003,
+          "price": 50,
+          "rawDescription": "GeneratedTip_Item_2003_Description",
+          "rawDisplayName": "Item_2003_Name",
+          "slot": 1
+        },
+        {
+          "canUse": true,
+          "consumable": false,
+          "count": 1,
+          "displayName": "투명 와드",
+          "itemID": 3340,
+          "price": 0,
+          "rawDescription": "GeneratedTip_Item_3340_Description",
+          "rawDisplayName": "Item_3340_Name",
+          "slot": 6
+        }
+      ],
+      "level": 1,
+      "position": "TOP",
+      "rawChampionName": "game_character_displayname_Maokai",
+      "rawSkinName": "game_character_displayname_Maokai",
+      "respawnTimer": 0.0,
+      "riotId": "Maokai#BOT",
+      "riotIdGameName": "Maokai",
+      "riotIdTagLine": "BOT",
+      "runes": {
+        "keystone": {
+          "displayName": "착취의 손아귀",
+          "id": 8437,
+          "rawDescription": "perk_tooltip_GraspOfTheUndying",
+          "rawDisplayName": "perk_displayname_GraspOfTheUndying"
+        },
+        "primaryRuneTree": {
+          "displayName": "결의",
+          "id": 8400,
+          "rawDescription": "perkstyle_tooltip_7204",
+          "rawDisplayName": "perkstyle_displayname_7204"
+        },
+        "secondaryRuneTree": {
+          "displayName": "마법",
+          "id": 8200,
+          "rawDescription": "perkstyle_tooltip_7202",
+          "rawDisplayName": "perkstyle_displayname_7202"
+        }
+      },
+      "scores": {
+        "assists": 0,
+        "creepScore": 0,
+        "deaths": 0,
+        "kills": 0,
+        "wardScore": 0.0
+      },
+      "skinID": 0,
+      "skinName": "마오카이",
+      "summonerName": "마오카이 봇",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "점멸",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerFlash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "순간이동",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerTeleport_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerTeleport_DisplayName"
+        }
+      },
+      "team": "ORDER"
+    },
+    {
+      "championName": "말자하",
+      "isBot": true,
+      "isDead": false,
+      "items": [
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "도란의 반지",
+          "itemID": 1056,
+          "price": 400,
+          "rawDescription": "GeneratedTip_Item_1056_Description",
+          "rawDisplayName": "Item_1056_Name",
+          "slot": 0
+        },
+        {
+          "canUse": true,
+          "consumable": true,
+          "count": 2,
+          "displayName": "체력 물약",
+          "itemID": 2003,
+          "price": 50,
+          "rawDescription": "GeneratedTip_Item_2003_Description",
+          "rawDisplayName": "Item_2003_Name",
+          "slot": 1
+        },
+        {
+          "canUse": true,
+          "consumable": false,
+          "count": 1,
+          "displayName": "투명 와드",
+          "itemID": 3340,
+          "price": 0,
+          "rawDescription": "GeneratedTip_Item_3340_Description",
+          "rawDisplayName": "Item_3340_Name",
+          "slot": 6
+        }
+      ],
+      "level": 1,
+      "position": "MIDDLE",
+      "rawChampionName": "game_character_displayname_Malzahar",
+      "rawSkinName": "game_character_displayname_Malzahar",
+      "respawnTimer": 0.0,
+      "riotId": "Malzahar#BOT",
+      "riotIdGameName": "Malzahar",
+      "riotIdTagLine": "BOT",
+      "runes": {
+        "keystone": {
+          "displayName": "신비로운 유성",
+          "id": 8229,
+          "rawDescription": "perk_tooltip_ArcaneComet",
+          "rawDisplayName": "perk_displayname_ArcaneComet"
+        },
+        "primaryRuneTree": {
+          "displayName": "마법",
+          "id": 8200,
+          "rawDescription": "perkstyle_tooltip_7202",
+          "rawDisplayName": "perkstyle_displayname_7202"
+        },
+        "secondaryRuneTree": {
+          "displayName": "지배",
+          "id": 8100,
+          "rawDescription": "perkstyle_tooltip_7200",
+          "rawDisplayName": "perkstyle_displayname_7200"
+        }
+      },
+      "scores": {
+        "assists": 0,
+        "creepScore": 0,
+        "deaths": 0,
+        "kills": 0,
+        "wardScore": 0.0
+      },
+      "skinID": 0,
+      "skinName": "말자하",
+      "summonerName": "말자하 봇",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "점멸",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerFlash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "순간이동",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerTeleport_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerTeleport_DisplayName"
+        }
+      },
+      "team": "ORDER"
+    },
+    {
+      "championName": "소라카",
+      "isBot": true,
+      "isDead": false,
+      "items": [],
+      "level": 1,
+      "position": "UTILITY",
+      "rawChampionName": "game_character_displayname_Soraka",
+      "rawSkinName": "game_character_displayname_Soraka",
+      "respawnTimer": 0.0,
+      "riotId": "Soraka#BOT",
+      "riotIdGameName": "Soraka",
+      "riotIdTagLine": "BOT",
+      "runes": {
+        "keystone": {
+          "displayName": "신비로운 유성",
+          "id": 8229,
+          "rawDescription": "perk_tooltip_ArcaneComet",
+          "rawDisplayName": "perk_displayname_ArcaneComet"
+        },
+        "primaryRuneTree": {
+          "displayName": "마법",
+          "id": 8200,
+          "rawDescription": "perkstyle_tooltip_7202",
+          "rawDisplayName": "perkstyle_displayname_7202"
+        },
+        "secondaryRuneTree": {
+          "displayName": "지배",
+          "id": 8100,
+          "rawDescription": "perkstyle_tooltip_7200",
+          "rawDisplayName": "perkstyle_displayname_7200"
+        }
+      },
+      "scores": {
+        "assists": 0,
+        "creepScore": 0,
+        "deaths": 0,
+        "kills": 0,
+        "wardScore": 0.0
+      },
+      "skinID": 0,
+      "skinName": "소라카",
+      "summonerName": "소라카 봇",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "점멸",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerFlash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "회복",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerHeal_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerHeal_DisplayName"
+        }
+      },
+      "team": "CHAOS"
+    },
+    {
+      "championName": "브랜드",
+      "isBot": true,
+      "isDead": false,
+      "items": [],
+      "level": 1,
+      "position": "MIDDLE",
+      "rawChampionName": "game_character_displayname_Brand",
+      "rawSkinName": "game_character_displayname_Brand",
+      "respawnTimer": 0.0,
+      "riotId": "Brand#BOT",
+      "riotIdGameName": "Brand",
+      "riotIdTagLine": "BOT",
+      "runes": {
+        "keystone": {
+          "displayName": "신비로운 유성",
+          "id": 8229,
+          "rawDescription": "perk_tooltip_ArcaneComet",
+          "rawDisplayName": "perk_displayname_ArcaneComet"
+        },
+        "primaryRuneTree": {
+          "displayName": "마법",
+          "id": 8200,
+          "rawDescription": "perkstyle_tooltip_7202",
+          "rawDisplayName": "perkstyle_displayname_7202"
+        },
+        "secondaryRuneTree": {
+          "displayName": "지배",
+          "id": 8100,
+          "rawDescription": "perkstyle_tooltip_7200",
+          "rawDisplayName": "perkstyle_displayname_7200"
+        }
+      },
+      "scores": {
+        "assists": 0,
+        "creepScore": 0,
+        "deaths": 0,
+        "kills": 0,
+        "wardScore": 0.0
+      },
+      "skinID": 0,
+      "skinName": "브랜드",
+      "summonerName": "브랜드 봇",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "점멸",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerFlash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "순간이동",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerTeleport_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerTeleport_DisplayName"
+        }
+      },
+      "team": "CHAOS"
+    },
+    {
+      "championName": "요릭",
+      "isBot": true,
+      "isDead": false,
+      "items": [],
+      "level": 1,
+      "position": "TOP",
+      "rawChampionName": "game_character_displayname_Yorick",
+      "rawSkinName": "game_character_displayname_Yorick",
+      "respawnTimer": 0.0,
+      "riotId": "Yorick#BOT",
+      "riotIdGameName": "Yorick",
+      "riotIdTagLine": "BOT",
+      "runes": {
+        "keystone": {
+          "displayName": "착취의 손아귀",
+          "id": 8437,
+          "rawDescription": "perk_tooltip_GraspOfTheUndying",
+          "rawDisplayName": "perk_displayname_GraspOfTheUndying"
+        },
+        "primaryRuneTree": {
+          "displayName": "결의",
+          "id": 8400,
+          "rawDescription": "perkstyle_tooltip_7204",
+          "rawDisplayName": "perkstyle_displayname_7204"
+        },
+        "secondaryRuneTree": {
+          "displayName": "마법",
+          "id": 8200,
+          "rawDescription": "perkstyle_tooltip_7202",
+          "rawDisplayName": "perkstyle_displayname_7202"
+        }
+      },
+      "scores": {
+        "assists": 0,
+        "creepScore": 0,
+        "deaths": 0,
+        "kills": 0,
+        "wardScore": 0.0
+      },
+      "skinID": 0,
+      "skinName": "요릭",
+      "summonerName": "요릭 봇",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "점멸",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerFlash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "순간이동",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerTeleport_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerTeleport_DisplayName"
+        }
+      },
+      "team": "CHAOS"
+    },
+    {
+      "championName": "릴리아",
+      "isBot": true,
+      "isDead": false,
+      "items": [],
+      "level": 1,
+      "position": "JUNGLE",
+      "rawChampionName": "game_character_displayname_Lillia",
+      "rawSkinName": "game_character_displayname_Lillia",
+      "respawnTimer": 0.0,
+      "riotId": "Lillia#BOT",
+      "riotIdGameName": "Lillia",
+      "riotIdTagLine": "BOT",
+      "runes": {
+        "keystone": {
+          "displayName": "감전",
+          "id": 8112,
+          "rawDescription": "perk_tooltip_Electrocute",
+          "rawDisplayName": "perk_displayname_Electrocute"
+        },
+        "primaryRuneTree": {
+          "displayName": "지배",
+          "id": 8100,
+          "rawDescription": "perkstyle_tooltip_7200",
+          "rawDisplayName": "perkstyle_displayname_7200"
+        },
+        "secondaryRuneTree": {
+          "displayName": "정밀",
+          "id": 8000,
+          "rawDescription": "perkstyle_tooltip_7201",
+          "rawDisplayName": "perkstyle_displayname_7201"
+        }
+      },
+      "scores": {
+        "assists": 0,
+        "creepScore": 0,
+        "deaths": 0,
+        "kills": 0,
+        "wardScore": 0.0
+      },
+      "skinID": 0,
+      "skinName": "릴리아",
+      "summonerName": "릴리아 봇",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "점멸",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerFlash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "강타",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerSmite_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerSmite_DisplayName"
+        }
+      },
+      "team": "CHAOS"
+    },
+    {
+      "championName": "진",
+      "isBot": true,
+      "isDead": false,
+      "items": [],
+      "level": 1,
+      "position": "BOTTOM",
+      "rawChampionName": "game_character_displayname_Jhin",
+      "rawSkinName": "game_character_displayname_Jhin",
+      "respawnTimer": 0.0,
+      "riotId": "Jhin#BOT",
+      "riotIdGameName": "Jhin",
+      "riotIdTagLine": "BOT",
+      "runes": {
+        "keystone": {
+          "displayName": "신비로운 유성",
+          "id": 8229,
+          "rawDescription": "perk_tooltip_ArcaneComet",
+          "rawDisplayName": "perk_displayname_ArcaneComet"
+        },
+        "primaryRuneTree": {
+          "displayName": "마법",
+          "id": 8200,
+          "rawDescription": "perkstyle_tooltip_7202",
+          "rawDisplayName": "perkstyle_displayname_7202"
+        },
+        "secondaryRuneTree": {
+          "displayName": "지배",
+          "id": 8100,
+          "rawDescription": "perkstyle_tooltip_7200",
+          "rawDisplayName": "perkstyle_displayname_7200"
+        }
+      },
+      "scores": {
+        "assists": 0,
+        "creepScore": 0,
+        "deaths": 0,
+        "kills": 0,
+        "wardScore": 0.0
+      },
+      "skinID": 0,
+      "skinName": "진",
+      "summonerName": "진 봇",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "방어막",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerBarrier_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerBarrier_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "점멸",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerFlash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+        }
+      },
+      "team": "CHAOS"
+    }
+  ],
+  "events": {
+    "Events": [
+      {
+        "EventID": 0,
+        "EventName": "GameStart",
+        "EventTime": 0.01595260016620159
+      }
+    ]
+  },
+  "gameData": {
+    "gameMode": "PRACTICETOOL",
+    "gameTime": 16.950366973876953,
+    "mapName": "Map11",
+    "mapNumber": 11,
+    "mapTerrain": "Default"
+  }
+}

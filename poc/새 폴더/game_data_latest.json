@@ -1,0 +1,1083 @@
+{
+  "poll_index": 79,
+  "collected_at": "2026-04-29T03:44:51.706212",
+  "activePlayer": {
+    "abilities": {
+      "E": {
+        "abilityLevel": 1,
+        "displayName": "급류",
+        "id": "NilahE",
+        "rawDescription": "GeneratedTip_Spell_NilahE_Description",
+        "rawDisplayName": "GeneratedTip_Spell_NilahE_DisplayName"
+      },
+      "Passive": {
+        "displayName": "영원한 기쁨",
+        "id": "NilahPassive",
+        "rawDescription": "GeneratedTip_Passive_NilahPassive_Description",
+        "rawDisplayName": "GeneratedTip_Passive_NilahPassive_DisplayName"
+      },
+      "Q": {
+        "abilityLevel": 3,
+        "displayName": "무형의 검",
+        "id": "NilahQ",
+        "rawDescription": "GeneratedTip_Spell_NilahQ_Description",
+        "rawDisplayName": "GeneratedTip_Spell_NilahQ_DisplayName"
+      },
+      "R": {
+        "abilityLevel": 0,
+        "displayName": "환희",
+        "id": "NilahR",
+        "rawDescription": "GeneratedTip_Spell_NilahR_Description",
+        "rawDisplayName": "GeneratedTip_Spell_NilahR_DisplayName"
+      },
+      "W": {
+        "abilityLevel": 1,
+        "displayName": "승리의 장막",
+        "id": "NilahW",
+        "rawDescription": "GeneratedTip_Spell_NilahW_Description",
+        "rawDisplayName": "GeneratedTip_Spell_NilahW_DisplayName"
+      }
+    },
+    "championStats": {
+      "abilityHaste": 5.0,
+      "abilityPower": 0.0,
+      "armor": 39.97800064086914,
+      "armorPenetrationFlat": 0.0,
+      "armorPenetrationPercent": 0.8500000238418579,
+      "attackDamage": 279.9800109863281,
+      "attackRange": 225.0,
+      "attackSpeed": 0.7228787541389465,
+      "bonusArmorPenetrationPercent": 1.0,
+      "bonusMagicPenetrationPercent": 1.0,
+      "critChance": 0.5,
+      "critDamage": 230.0,
+      "currentHealth": 962.0900268554688,
+      "healShieldPower": 0.0,
+      "healthRegenRate": 2.1952500343322754,
+      "lifeSteal": 0.15000000596046448,
+      "magicLethality": 0.0,
+      "magicPenetrationFlat": 0.0,
+      "magicPenetrationPercent": 1.0,
+      "magicResist": 38.33449935913086,
+      "maxHealth": 962.0900268554688,
+      "moveSpeed": 340.0,
+      "omnivamp": 0.0,
+      "physicalLethality": 10.0,
+      "physicalVamp": 0.0,
+      "resourceMax": 483.1500244140625,
+      "resourceRegenRate": 2.590749740600586,
+      "resourceType": "MANA",
+      "resourceValue": 289.0328674316406,
+      "spellVamp": 0.0,
+      "tenacity": 5.0
+    },
+    "currentGold": 1615.631591796875,
+    "fullRunes": {
+      "generalRunes": [
+        {
+          "displayName": "난입",
+          "id": 8230,
+          "rawDescription": "perk_tooltip_PhaseRush",
+          "rawDisplayName": "perk_displayname_PhaseRush"
+        },
+        {
+          "displayName": "마나순환 팔찌",
+          "id": 8226,
+          "rawDescription": "perk_tooltip_8226",
+          "rawDisplayName": "perk_displayname_8226"
+        },
+        {
+          "displayName": "깨달음",
+          "id": 8210,
+          "rawDescription": "perk_tooltip_Transcendence",
+          "rawDisplayName": "perk_displayname_Transcendence"
+        },
+        {
+          "displayName": "주문 작열",
+          "id": 8237,
+          "rawDescription": "perk_tooltip_Scorch",
+          "rawDisplayName": "perk_displayname_Scorch"
+        },
+        {
+          "displayName": "비스킷 배달",
+          "id": 8345,
+          "rawDescription": "perk_tooltip_BiscuitDelivery",
+          "rawDisplayName": "perk_displayname_BiscuitDelivery"
+        },
+        {
+          "displayName": "마법의 신발",
+          "id": 8304,
+          "rawDescription": "perk_tooltip_MagicalFootwear",
+          "rawDisplayName": "perk_displayname_MagicalFootwear"
+        }
+      ],
+      "keystone": {
+        "displayName": "난입",
+        "id": 8230,
+        "rawDescription": "perk_tooltip_PhaseRush",
+        "rawDisplayName": "perk_displayname_PhaseRush"
+      },
+      "primaryRuneTree": {
+        "displayName": "마법",
+        "id": 8200,
+        "rawDescription": "perkstyle_tooltip_7202",
+        "rawDisplayName": "perkstyle_displayname_7202"
+      },
+      "secondaryRuneTree": {
+        "displayName": "영감",
+        "id": 8300,
+        "rawDescription": "perkstyle_tooltip_7203",
+        "rawDisplayName": "perkstyle_displayname_7203"
+      },
+      "statRunes": [
+        {
+          "id": 5008,
+          "rawDescription": "perk_tooltip_StatModAdaptive"
+        },
+        {
+          "id": 5008,
+          "rawDescription": "perk_tooltip_StatModAdaptive"
+        },
+        {
+          "id": 5001,
+          "rawDescription": "perk_tooltip_StatModHealthScaling"
+        }
+      ]
+    },
+    "level": 5,
+    "riotId": "챙 렬#KR1",
+    "riotIdGameName": "챙 렬",
+    "riotIdTagLine": "KR1",
+    "summonerName": "챙 렬#KR1",
+    "teamRelativeColors": true
+  },
+  "allPlayers": [
+    {
+      "championName": "닐라",
+      "isBot": false,
+      "isDead": false,
+      "items": [
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "세계 지도집",
+          "itemID": 3865,
+          "price": 400,
+          "rawDescription": "GeneratedTip_Item_3865_Description",
+          "rawDisplayName": "Item_3865_Name",
+          "slot": 0
+        },
+        {
+          "canUse": true,
+          "consumable": true,
+          "count": 2,
+          "displayName": "체력 물약",
+          "itemID": 2003,
+          "price": 50,
+          "rawDescription": "GeneratedTip_Item_2003_Description",
+          "rawDisplayName": "Item_2003_Name",
+          "slot": 1
+        },
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "무한의 대검",
+          "itemID": 3031,
+          "price": 725,
+          "rawDescription": "GeneratedTip_Item_3031_Description",
+          "rawDisplayName": "Item_3031_Name",
+          "slot": 2
+        },
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "징수의 총",
+          "itemID": 6676,
+          "price": 525,
+          "rawDescription": "GeneratedTip_Item_6676_Description",
+          "rawDisplayName": "Item_6676_Name",
+          "slot": 3
+        },
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "피바라기",
+          "itemID": 3072,
+          "price": 325,
+          "rawDescription": "GeneratedTip_Item_3072_Description",
+          "rawDisplayName": "Item_3072_Name",
+          "slot": 4
+        },
+        {
+          "canUse": true,
+          "consumable": false,
+          "count": 1,
+          "displayName": "투명 와드",
+          "itemID": 3340,
+          "price": 0,
+          "rawDescription": "GeneratedTip_Item_3340_Description",
+          "rawDisplayName": "Item_3340_Name",
+          "slot": 6
+        }
+      ],
+      "level": 5,
+      "position": "NONE",
+      "rawChampionName": "game_character_displayname_Nilah",
+      "rawSkinName": "game_character_displayname_Nilah",
+      "respawnTimer": 0.0,
+      "riotId": "챙 렬#KR1",
+      "riotIdGameName": "챙 렬",
+      "riotIdTagLine": "KR1",
+      "runes": {
+        "keystone": {
+          "displayName": "난입",
+          "id": 8230,
+          "rawDescription": "perk_tooltip_PhaseRush",
+          "rawDisplayName": "perk_displayname_PhaseRush"
+        },
+        "primaryRuneTree": {
+          "displayName": "마법",
+          "id": 8200,
+          "rawDescription": "perkstyle_tooltip_7202",
+          "rawDisplayName": "perkstyle_displayname_7202"
+        },
+        "secondaryRuneTree": {
+          "displayName": "영감",
+          "id": 8300,
+          "rawDescription": "perkstyle_tooltip_7203",
+          "rawDisplayName": "perkstyle_displayname_7203"
+        }
+      },
+      "scores": {
+        "assists": 0,
+        "creepScore": 0,
+        "deaths": 0,
+        "kills": 4,
+        "wardScore": 0.0
+      },
+      "skinID": 0,
+      "skinName": "닐라",
+      "summonerName": "챙 렬#KR1",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "점화",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerDot_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerDot_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "점멸",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerFlash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+        }
+      },
+      "team": "ORDER"
+    },
+    {
+      "championName": "말파이트",
+      "isBot": true,
+      "isDead": false,
+      "items": [
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "새끼 화염발톱",
+          "itemID": 1101,
+          "price": 450,
+          "rawDescription": "GeneratedTip_Item_1101_Description",
+          "rawDisplayName": "Item_1101_Name",
+          "slot": 0
+        },
+        {
+          "canUse": true,
+          "consumable": false,
+          "count": 1,
+          "displayName": "투명 와드",
+          "itemID": 3340,
+          "price": 0,
+          "rawDescription": "GeneratedTip_Item_3340_Description",
+          "rawDisplayName": "Item_3340_Name",
+          "slot": 6
+        }
+      ],
+      "level": 2,
+      "position": "JUNGLE",
+      "rawChampionName": "game_character_displayname_Malphite",
+      "rawSkinName": "game_character_displayname_Malphite",
+      "respawnTimer": 0.0,
+      "riotId": "Malphite#BOT",
+      "riotIdGameName": "Malphite",
+      "riotIdTagLine": "BOT",
+      "runes": {
+        "keystone": {
+          "displayName": "착취의 손아귀",
+          "id": 8437,
+          "rawDescription": "perk_tooltip_GraspOfTheUndying",
+          "rawDisplayName": "perk_displayname_GraspOfTheUndying"
+        },
+        "primaryRuneTree": {
+          "displayName": "결의",
+          "id": 8400,
+          "rawDescription": "perkstyle_tooltip_7204",
+          "rawDisplayName": "perkstyle_displayname_7204"
+        },
+        "secondaryRuneTree": {
+          "displayName": "마법",
+          "id": 8200,
+          "rawDescription": "perkstyle_tooltip_7202",
+          "rawDisplayName": "perkstyle_displayname_7202"
+        }
+      },
+      "scores": {
+        "assists": 0,
+        "creepScore": 0,
+        "deaths": 0,
+        "kills": 0,
+        "wardScore": 0.0
+      },
+      "skinID": 0,
+      "skinName": "말파이트",
+      "summonerName": "말파이트 봇",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "점멸",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerFlash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "강타",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerSmite_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerSmite_DisplayName"
+        }
+      },
+      "team": "ORDER"
+    },
+    {
+      "championName": "스웨인",
+      "isBot": true,
+      "isDead": false,
+      "items": [
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "도란의 반지",
+          "itemID": 1056,
+          "price": 400,
+          "rawDescription": "GeneratedTip_Item_1056_Description",
+          "rawDisplayName": "Item_1056_Name",
+          "slot": 0
+        },
+        {
+          "canUse": true,
+          "consumable": true,
+          "count": 2,
+          "displayName": "체력 물약",
+          "itemID": 2003,
+          "price": 50,
+          "rawDescription": "GeneratedTip_Item_2003_Description",
+          "rawDisplayName": "Item_2003_Name",
+          "slot": 1
+        },
+        {
+          "canUse": true,
+          "consumable": false,
+          "count": 1,
+          "displayName": "투명 와드",
+          "itemID": 3340,
+          "price": 0,
+          "rawDescription": "GeneratedTip_Item_3340_Description",
+          "rawDisplayName": "Item_3340_Name",
+          "slot": 6
+        }
+      ],
+      "level": 2,
+      "position": "BOTTOM",
+      "rawChampionName": "game_character_displayname_Swain",
+      "rawSkinName": "game_character_displayname_Swain",
+      "respawnTimer": 0.0,
+      "riotId": "Swain#BOT",
+      "riotIdGameName": "Swain",
+      "riotIdTagLine": "BOT",
+      "runes": {
+        "keystone": {
+          "displayName": "신비로운 유성",
+          "id": 8229,
+          "rawDescription": "perk_tooltip_ArcaneComet",
+          "rawDisplayName": "perk_displayname_ArcaneComet"
+        },
+        "primaryRuneTree": {
+          "displayName": "마법",
+          "id": 8200,
+          "rawDescription": "perkstyle_tooltip_7202",
+          "rawDisplayName": "perkstyle_displayname_7202"
+        },
+        "secondaryRuneTree": {
+          "displayName": "지배",
+          "id": 8100,
+          "rawDescription": "perkstyle_tooltip_7200",
+          "rawDisplayName": "perkstyle_displayname_7200"
+        }
+      },
+      "scores": {
+        "assists": 0,
+        "creepScore": 0,
+        "deaths": 0,
+        "kills": 0,
+        "wardScore": 0.0
+      },
+      "skinID": 0,
+      "skinName": "스웨인",
+      "summonerName": "스웨인 봇",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "점멸",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerFlash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "유체화",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerHaste_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerHaste_DisplayName"
+        }
+      },
+      "team": "ORDER"
+    },
+    {
+      "championName": "피들스틱",
+      "isBot": true,
+      "isDead": false,
+      "items": [
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "도란의 반지",
+          "itemID": 1056,
+          "price": 400,
+          "rawDescription": "GeneratedTip_Item_1056_Description",
+          "rawDisplayName": "Item_1056_Name",
+          "slot": 0
+        },
+        {
+          "canUse": true,
+          "consumable": false,
+          "count": 1,
+          "displayName": "허수아비",
+          "itemID": 3330,
+          "price": 0,
+          "rawDescription": "GeneratedTip_Item_3330_Description",
+          "rawDisplayName": "Item_3330_Name",
+          "slot": 6
+        }
+      ],
+      "level": 1,
+      "position": "TOP",
+      "rawChampionName": "game_character_displayname_Fiddlesticks",
+      "rawSkinName": "game_character_displayname_FiddleSticks",
+      "respawnTimer": 0.0,
+      "riotId": "FiddleSticks#BOT",
+      "riotIdGameName": "FiddleSticks",
+      "riotIdTagLine": "BOT",
+      "runes": {
+        "keystone": {
+          "displayName": "신비로운 유성",
+          "id": 8229,
+          "rawDescription": "perk_tooltip_ArcaneComet",
+          "rawDisplayName": "perk_displayname_ArcaneComet"
+        },
+        "primaryRuneTree": {
+          "displayName": "마법",
+          "id": 8200,
+          "rawDescription": "perkstyle_tooltip_7202",
+          "rawDisplayName": "perkstyle_displayname_7202"
+        },
+        "secondaryRuneTree": {
+          "displayName": "지배",
+          "id": 8100,
+          "rawDescription": "perkstyle_tooltip_7200",
+          "rawDisplayName": "perkstyle_displayname_7200"
+        }
+      },
+      "scores": {
+        "assists": 1,
+        "creepScore": 0,
+        "deaths": 0,
+        "kills": 0,
+        "wardScore": 0.0
+      },
+      "skinID": 0,
+      "skinName": "피들스틱",
+      "summonerName": "피들스틱 봇",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "점멸",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerFlash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "점화",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerDot_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerDot_DisplayName"
+        }
+      },
+      "team": "ORDER"
+    },
+    {
+      "championName": "리산드라",
+      "isBot": true,
+      "isDead": false,
+      "items": [
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "도란의 반지",
+          "itemID": 1056,
+          "price": 400,
+          "rawDescription": "GeneratedTip_Item_1056_Description",
+          "rawDisplayName": "Item_1056_Name",
+          "slot": 0
+        },
+        {
+          "canUse": true,
+          "consumable": true,
+          "count": 1,
+          "displayName": "체력 물약",
+          "itemID": 2003,
+          "price": 50,
+          "rawDescription": "GeneratedTip_Item_2003_Description",
+          "rawDisplayName": "Item_2003_Name",
+          "slot": 1
+        },
+        {
+          "canUse": true,
+          "consumable": false,
+          "count": 1,
+          "displayName": "투명 와드",
+          "itemID": 3340,
+          "price": 0,
+          "rawDescription": "GeneratedTip_Item_3340_Description",
+          "rawDisplayName": "Item_3340_Name",
+          "slot": 6
+        }
+      ],
+      "level": 1,
+      "position": "MIDDLE",
+      "rawChampionName": "game_character_displayname_Lissandra",
+      "rawSkinName": "game_character_displayname_Lissandra",
+      "respawnTimer": 0.0,
+      "riotId": "Lissandra#BOT",
+      "riotIdGameName": "Lissandra",
+      "riotIdTagLine": "BOT",
+      "runes": {
+        "keystone": {
+          "displayName": "감전",
+          "id": 8112,
+          "rawDescription": "perk_tooltip_Electrocute",
+          "rawDisplayName": "perk_displayname_Electrocute"
+        },
+        "primaryRuneTree": {
+          "displayName": "지배",
+          "id": 8100,
+          "rawDescription": "perkstyle_tooltip_7200",
+          "rawDisplayName": "perkstyle_displayname_7200"
+        },
+        "secondaryRuneTree": {
+          "displayName": "정밀",
+          "id": 8000,
+          "rawDescription": "perkstyle_tooltip_7201",
+          "rawDisplayName": "perkstyle_displayname_7201"
+        }
+      },
+      "scores": {
+        "assists": 1,
+        "creepScore": 0,
+        "deaths": 0,
+        "kills": 0,
+        "wardScore": 0.0
+      },
+      "skinID": 0,
+      "skinName": "리산드라",
+      "summonerName": "리산드라 봇",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "점멸",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerFlash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "순간이동",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerTeleport_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerTeleport_DisplayName"
+        }
+      },
+      "team": "ORDER"
+    },
+    {
+      "championName": "다이애나",
+      "isBot": true,
+      "isDead": false,
+      "items": [],
+      "level": 1,
+      "position": "JUNGLE",
+      "rawChampionName": "game_character_displayname_Diana",
+      "rawSkinName": "game_character_displayname_Diana",
+      "respawnTimer": 0.0,
+      "riotId": "Diana#BOT",
+      "riotIdGameName": "Diana",
+      "riotIdTagLine": "BOT",
+      "runes": {
+        "keystone": {
+          "displayName": "감전",
+          "id": 8112,
+          "rawDescription": "perk_tooltip_Electrocute",
+          "rawDisplayName": "perk_displayname_Electrocute"
+        },
+        "primaryRuneTree": {
+          "displayName": "지배",
+          "id": 8100,
+          "rawDescription": "perkstyle_tooltip_7200",
+          "rawDisplayName": "perkstyle_displayname_7200"
+        },
+        "secondaryRuneTree": {
+          "displayName": "정밀",
+          "id": 8000,
+          "rawDescription": "perkstyle_tooltip_7201",
+          "rawDisplayName": "perkstyle_displayname_7201"
+        }
+      },
+      "scores": {
+        "assists": 0,
+        "creepScore": 0,
+        "deaths": 0,
+        "kills": 0,
+        "wardScore": 0.0
+      },
+      "skinID": 0,
+      "skinName": "다이애나",
+      "summonerName": "다이애나 봇",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "점멸",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerFlash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "강타",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerSmite_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerSmite_DisplayName"
+        }
+      },
+      "team": "CHAOS"
+    },
+    {
+      "championName": "코그모",
+      "isBot": true,
+      "isDead": false,
+      "items": [
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "도란의 반지",
+          "itemID": 1056,
+          "price": 400,
+          "rawDescription": "GeneratedTip_Item_1056_Description",
+          "rawDisplayName": "Item_1056_Name",
+          "slot": 0
+        },
+        {
+          "canUse": true,
+          "consumable": false,
+          "count": 1,
+          "displayName": "투명 와드",
+          "itemID": 3340,
+          "price": 0,
+          "rawDescription": "GeneratedTip_Item_3340_Description",
+          "rawDisplayName": "Item_3340_Name",
+          "slot": 6
+        }
+      ],
+      "level": 1,
+      "position": "BOTTOM",
+      "rawChampionName": "game_character_displayname_KogMaw",
+      "rawSkinName": "game_character_displayname_KogMaw",
+      "respawnTimer": 0.0,
+      "riotId": "KogMaw#BOT",
+      "riotIdGameName": "KogMaw",
+      "riotIdTagLine": "BOT",
+      "runes": {
+        "keystone": {
+          "displayName": "집중 공격",
+          "id": 8005,
+          "rawDescription": "perk_tooltip_PressTheAttack",
+          "rawDisplayName": "perk_displayname_PressTheAttack"
+        },
+        "primaryRuneTree": {
+          "displayName": "정밀",
+          "id": 8000,
+          "rawDescription": "perkstyle_tooltip_7201",
+          "rawDisplayName": "perkstyle_displayname_7201"
+        },
+        "secondaryRuneTree": {
+          "displayName": "마법",
+          "id": 8200,
+          "rawDescription": "perkstyle_tooltip_7202",
+          "rawDisplayName": "perkstyle_displayname_7202"
+        }
+      },
+      "scores": {
+        "assists": 0,
+        "creepScore": 0,
+        "deaths": 1,
+        "kills": 0,
+        "wardScore": 0.0
+      },
+      "skinID": 0,
+      "skinName": "코그모",
+      "summonerName": "코그모 봇",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "방어막",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerBarrier_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerBarrier_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "점멸",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerFlash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+        }
+      },
+      "team": "CHAOS"
+    },
+    {
+      "championName": "케넨",
+      "isBot": true,
+      "isDead": false,
+      "items": [
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "도란의 검",
+          "itemID": 1055,
+          "price": 450,
+          "rawDescription": "GeneratedTip_Item_1055_Description",
+          "rawDisplayName": "Item_1055_Name",
+          "slot": 0
+        },
+        {
+          "canUse": true,
+          "consumable": false,
+          "count": 1,
+          "displayName": "투명 와드",
+          "itemID": 3340,
+          "price": 0,
+          "rawDescription": "GeneratedTip_Item_3340_Description",
+          "rawDisplayName": "Item_3340_Name",
+          "slot": 6
+        }
+      ],
+      "level": 1,
+      "position": "MIDDLE",
+      "rawChampionName": "game_character_displayname_Kennen",
+      "rawSkinName": "game_character_displayname_Kennen",
+      "respawnTimer": 0.0,
+      "riotId": "Kennen#BOT",
+      "riotIdGameName": "Kennen",
+      "riotIdTagLine": "BOT",
+      "runes": {
+        "keystone": {
+          "displayName": "신비로운 유성",
+          "id": 8229,
+          "rawDescription": "perk_tooltip_ArcaneComet",
+          "rawDisplayName": "perk_displayname_ArcaneComet"
+        },
+        "primaryRuneTree": {
+          "displayName": "마법",
+          "id": 8200,
+          "rawDescription": "perkstyle_tooltip_7202",
+          "rawDisplayName": "perkstyle_displayname_7202"
+        },
+        "secondaryRuneTree": {
+          "displayName": "지배",
+          "id": 8100,
+          "rawDescription": "perkstyle_tooltip_7200",
+          "rawDisplayName": "perkstyle_displayname_7200"
+        }
+      },
+      "scores": {
+        "assists": 0,
+        "creepScore": 0,
+        "deaths": 1,
+        "kills": 0,
+        "wardScore": 0.0
+      },
+      "skinID": 0,
+      "skinName": "케넨",
+      "summonerName": "케넨 봇",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "점멸",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerFlash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "점화",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerDot_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerDot_DisplayName"
+        }
+      },
+      "team": "CHAOS"
+    },
+    {
+      "championName": "자이라",
+      "isBot": true,
+      "isDead": false,
+      "items": [
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "세계 지도집",
+          "itemID": 3865,
+          "price": 400,
+          "rawDescription": "GeneratedTip_Item_3865_Description",
+          "rawDisplayName": "Item_3865_Name",
+          "slot": 0
+        },
+        {
+          "canUse": true,
+          "consumable": false,
+          "count": 1,
+          "displayName": "투명 와드",
+          "itemID": 3340,
+          "price": 0,
+          "rawDescription": "GeneratedTip_Item_3340_Description",
+          "rawDisplayName": "Item_3340_Name",
+          "slot": 6
+        }
+      ],
+      "level": 1,
+      "position": "UTILITY",
+      "rawChampionName": "game_character_displayname_Zyra",
+      "rawSkinName": "game_character_displayname_Zyra",
+      "respawnTimer": 0.0,
+      "riotId": "Zyra#BOT",
+      "riotIdGameName": "Zyra",
+      "riotIdTagLine": "BOT",
+      "runes": {
+        "keystone": {
+          "displayName": "신비로운 유성",
+          "id": 8229,
+          "rawDescription": "perk_tooltip_ArcaneComet",
+          "rawDisplayName": "perk_displayname_ArcaneComet"
+        },
+        "primaryRuneTree": {
+          "displayName": "마법",
+          "id": 8200,
+          "rawDescription": "perkstyle_tooltip_7202",
+          "rawDisplayName": "perkstyle_displayname_7202"
+        },
+        "secondaryRuneTree": {
+          "displayName": "지배",
+          "id": 8100,
+          "rawDescription": "perkstyle_tooltip_7200",
+          "rawDisplayName": "perkstyle_displayname_7200"
+        }
+      },
+      "scores": {
+        "assists": 0,
+        "creepScore": 0,
+        "deaths": 1,
+        "kills": 0,
+        "wardScore": 0.0
+      },
+      "skinID": 0,
+      "skinName": "자이라",
+      "summonerName": "자이라 봇",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "점멸",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerFlash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "점화",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerDot_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerDot_DisplayName"
+        }
+      },
+      "team": "CHAOS"
+    },
+    {
+      "championName": "볼리베어",
+      "isBot": true,
+      "isDead": true,
+      "items": [
+        {
+          "canUse": false,
+          "consumable": false,
+          "count": 1,
+          "displayName": "도란의 검",
+          "itemID": 1055,
+          "price": 450,
+          "rawDescription": "GeneratedTip_Item_1055_Description",
+          "rawDisplayName": "Item_1055_Name",
+          "slot": 0
+        },
+        {
+          "canUse": true,
+          "consumable": false,
+          "count": 1,
+          "displayName": "투명 와드",
+          "itemID": 3340,
+          "price": 0,
+          "rawDescription": "GeneratedTip_Item_3340_Description",
+          "rawDisplayName": "Item_3340_Name",
+          "slot": 6
+        }
+      ],
+      "level": 1,
+      "position": "TOP",
+      "rawChampionName": "game_character_displayname_Volibear",
+      "rawSkinName": "game_character_displayname_Volibear",
+      "respawnTimer": 0.1073141098022461,
+      "riotId": "Volibear#BOT",
+      "riotIdGameName": "Volibear",
+      "riotIdTagLine": "BOT",
+      "runes": {
+        "keystone": {
+          "displayName": "착취의 손아귀",
+          "id": 8437,
+          "rawDescription": "perk_tooltip_GraspOfTheUndying",
+          "rawDisplayName": "perk_displayname_GraspOfTheUndying"
+        },
+        "primaryRuneTree": {
+          "displayName": "결의",
+          "id": 8400,
+          "rawDescription": "perkstyle_tooltip_7204",
+          "rawDisplayName": "perkstyle_displayname_7204"
+        },
+        "secondaryRuneTree": {
+          "displayName": "마법",
+          "id": 8200,
+          "rawDescription": "perkstyle_tooltip_7202",
+          "rawDisplayName": "perkstyle_displayname_7202"
+        }
+      },
+      "scores": {
+        "assists": 0,
+        "creepScore": 0,
+        "deaths": 1,
+        "kills": 0,
+        "wardScore": 0.0
+      },
+      "skinID": 0,
+      "skinName": "볼리베어",
+      "summonerName": "볼리베어 봇",
+      "summonerSpells": {
+        "summonerSpellOne": {
+          "displayName": "점멸",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerFlash_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+        },
+        "summonerSpellTwo": {
+          "displayName": "점화",
+          "rawDescription": "GeneratedTip_SummonerSpell_SummonerDot_Description",
+          "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerDot_DisplayName"
+        }
+      },
+      "team": "CHAOS"
+    }
+  ],
+  "events": {
+    "Events": [
+      {
+        "EventID": 0,
+        "EventName": "GameStart",
+        "EventTime": 0.01640629954636097
+      },
+      {
+        "EventID": 1,
+        "EventName": "MinionsSpawning",
+        "EventTime": 30.038253784179688
+      },
+      {
+        "Assisters": [],
+        "EventID": 2,
+        "EventName": "ChampionKill",
+        "EventTime": 63.06300735473633,
+        "KillerName": "챙 렬",
+        "VictimName": "자이라 봇"
+      },
+      {
+        "EventID": 3,
+        "EventName": "FirstBlood",
+        "EventTime": 63.06300735473633,
+        "Recipient": "챙 렬"
+      },
+      {
+        "Assisters": [],
+        "EventID": 4,
+        "EventName": "ChampionKill",
+        "EventTime": 63.06300735473633,
+        "KillerName": "챙 렬",
+        "VictimName": "코그모 봇"
+      },
+      {
+        "EventID": 5,
+        "EventName": "Multikill",
+        "EventTime": 63.06300735473633,
+        "KillStreak": 2,
+        "KillerName": "챙 렬"
+      },
+      {
+        "Assisters": [
+          "리산드라 봇"
+        ],
+        "EventID": 6,
+        "EventName": "ChampionKill",
+        "EventTime": 66.49822235107422,
+        "KillerName": "챙 렬",
+        "VictimName": "케넨 봇"
+      },
+      {
+        "EventID": 7,
+        "EventName": "Multikill",
+        "EventTime": 66.49822235107422,
+        "KillStreak": 3,
+        "KillerName": "챙 렬"
+      },
+      {
+        "Assisters": [
+          "피들스틱 봇"
+        ],
+        "EventID": 8,
+        "EventName": "ChampionKill",
+        "EventTime": 74.21186828613281,
+        "KillerName": "챙 렬",
+        "VictimName": "볼리베어 봇"
+      },
+      {
+        "EventID": 9,
+        "EventName": "Multikill",
+        "EventTime": 74.21186828613281,
+        "KillStreak": 4,
+        "KillerName": "챙 렬"
+      }
+    ]
+  },
+  "gameData": {
+    "gameMode": "PRACTICETOOL",
+    "gameTime": 84.10455322265625,
+    "mapName": "Map11",
+    "mapNumber": 11,
+    "mapTerrain": "Default"
+  }
+}
