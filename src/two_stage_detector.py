@@ -365,37 +365,3 @@ if __name__ == "__main__":
         print(f"  top1 of box     : {mp.top1} ({mp.top1_conf:.3f})")
     else:
         print("\nmy_position: None (no ally boxes or my_champ unknown)")
-t=Path(__file__).resolve().parent.parent / "models" / "champion_classifier.pt")
-    ap.add_argument("--device", default="0")
-    args = ap.parse_args()
-
-    model_a = args.model_a if args.model_a.exists() else None
-    if model_a is None:
-        print(f"[!] {args.model_a} 없음 — manual_boxes 모드로 진행")
-
-    det = TwoStageDetectorV2(model_a, args.model_b, device=args.device)
-
-    img = Image.open(args.image).convert("RGB")
-    manual = None
-    if args.label and args.label.exists():
-        manual = _load_yolo_labels(args.label, img.size[0], img.size[1])
-
-    result = det.predict(img, my_champion_name=args.my_champ, manual_boxes=manual)
-
-    print(f"image     : {args.image}")
-    print(f"my champ  : {args.my_champ}")
-    print(f"ally  ({len(result['ally'])}):")
-    for b in result["ally"]:
-        print(f"  {b.bbox}  top1={b.top1} ({b.top1_conf:.2f})  my_score={b.score_for_my_champ:.3f}")
-    print(f"enemy ({len(result['enemy'])}):")
-    for b in result["enemy"]:
-        print(f"  {b.bbox}  top1={b.top1} ({b.top1_conf:.2f})")
-    if result["my_position"]:
-        mp = result["my_position"]
-        print(f"\nmy_position:")
-        print(f"  bbox            : {mp.bbox}")
-        print(f"  score_for_my    : {mp.score_for_my_champ:.3f}")
-        print(f"  rank in box     : {mp.rank}  (1 = top-1)")
-        print(f"  top1 of box     : {mp.top1} ({mp.top1_conf:.3f})")
-    else:
-        print("\nmy_position: None (no ally boxes or my_champ unknown)")
