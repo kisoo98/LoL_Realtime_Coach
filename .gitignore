@@ -19,7 +19,7 @@ build/
 dist/
 *.spec
 
-# Training pipeline (사용자 배포본에 불필요)
+# Training pipeline
 training/
 data/
 models/
@@ -27,7 +27,7 @@ runs/
 yolo_env/
 validation_results/
 
-# Planning documents (팀 내부용 — 외부 배포 금지)
+# Planning documents (internal only)
 기획/
 
 # Large files
@@ -42,6 +42,14 @@ logs/
 *.log
 temp/
 output/
+outputs/
+
+# Local extracted UI bundle
+UI_v1/
+
+# Windows accidental NUL pipe file
+nul
+/nul
 
 # OS
 .DS_Store

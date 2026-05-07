@@ -1,6 +1,8 @@
 import sys
 import time
 import os
+import queue
+import tempfile
 from PyQt6.QtWidgets import QApplication, QWidget
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QFont, QColor, QPainter, QBrush, QPen
@@ -17,37 +19,47 @@ import live_game
 class VoiceThread(QThread):
     def __init__(self):
         super().__init__()
-        self.queue = []
+        # queue.Queue: put()/get() 모두 스레드 안전 (GIL 외 별도 락 내장)
+        self._queue = queue.Queue()
         pygame.mixer.init()
         self.running = True
 
     def speak(self, text):
-        """외부에서 음성으로 읽을 텍스트를 큐에 넣습니다."""
-        self.queue.append(text)
+        """외부에서 음성으로 읽을 텍스트를 큐에 넣습니다. (스레드 안전)"""
+        self._queue.put(text)
 
     def run(self):
         while self.running:
-            if self.queue:
-                text = self.queue.pop(0)
+            try:
+                # block=True + timeout=0.1 → 0.1초마다 running 재확인
+                text = self._queue.get(block=True, timeout=0.1)
+            except queue.Empty:
+                continue
+
+            try:
+                # 구글 TTS에 요청하여 mp3 생성
+                tts = gTTS(text=text, lang='ko')
+                # 임시 파일: 동시 실행·충돌 방지 + 자동 삭제
+                with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
+                    tmp_path = tmp.name
+                tts.save(tmp_path)
+
+                # pygame을 이용해 mp3 재생
+                pygame.mixer.music.load(tmp_path)
+                pygame.mixer.music.play()
+
+                # 재생이 끝날 때까지 대기
+                while pygame.mixer.music.get_busy() and self.running:
+                    time.sleep(0.1)
+
+                # 파일 잠금 해제 후 임시 파일 삭제
+                pygame.mixer.music.unload()
                 try:
-                    # 구글 TTS에 요청하여 mp3 생성
-                    tts = gTTS(text=text, lang='ko')
-                    filename = "temp_voice.mp3"
-                    tts.save(filename)
-                    
-                    # pygame을 이용해 mp3 재생
-                    pygame.mixer.music.load(filename)
-                    pygame.mixer.music.play()
-                    
-                    # 재생이 끝날 때까지 대기
-                    while pygame.mixer.music.get_busy() and self.running:
-                        time.sleep(0.1)
-                        
-                    # 파일 잠금 해제 (다음 음성이 덮어쓸 수 있도록)
-                    pygame.mixer.music.unload()
-                except Exception as e:
-                    print(f"TTS 재생 오류: {e}")
-            time.sleep(0.1)
+                    os.remove(tmp_path)
+                except OSError:
+                    pass
+            except Exception as e:
+                print(f"TTS 재생 오류: {e}")
 
     def stop(self):
         self.running = False

@@ -1,223 +1,185 @@
-"""Risk assessment module for minimap data."""
+"""
+Risk assessment module -- LoL Realtime Coach v2.1
+==================================================
+Official rules doc (LoL_Realtime_Coach_Official_Rules.md) sec2.3 implementation.
+
+Formula:
+    min(100.0, weighted_distance_points x advantage_factor x concentration_factor)
+
+Factors:
+    1. weighted_distance_points : per-enemy dist score * confidence weight
+    2. advantage_factor         : ally_count vs enemy_count
+    3. concentration_factor     : enemy spread (std-dev based)
+
+Interface:
+    result = {
+        "my_position": DetBox | None,
+        "ally":        [DetBox, ...],
+        "enemy":       [DetBox, ...],
+    }
+    DetBox must have .bbox (x1,y1,x2,y2) and .top1_conf (float).
+"""
 from __future__ import annotations
 
+import math
 import time
-from typing import Dict, List
+from typing import Any
 
+# -- constants (official rules sec6) -----------------------------------------
+
+# sec6.1 distance-based
+DANGER_RADIUS_HIGH = 60    # px -> +40 pts
+DANGER_RADIUS_MID  = 120   # px -> +20 pts
+
+# sec6.2 LLM call
+RISK_AUTO_ALERT     = 65   # trigger LLM when risk >= this
+RISK_ALERT_COOLDOWN = 10   # seconds
+
+# sec6.3 numerical advantage factor
+ADVANTAGE_LARGE_LOSS  = 1.40   # enemy > ally + 2
+ADVANTAGE_MID_LOSS    = 1.30   # enemy = ally + 2
+ADVANTAGE_SMALL_LOSS  = 1.15   # enemy = ally + 1
+ADVANTAGE_EQUAL       = 1.00   # enemy = ally
+ADVANTAGE_GAIN        = 0.85   # ally > enemy
+
+# sec6.4 threat concentration factor
+CONCENTRATION_VERY_HIGH   = 1.25   # std < 30px
+CONCENTRATION_HIGH        = 1.15   # std 30-60px
+CONCENTRATION_MEDIUM      = 1.00   # std 60-100px
+CONCENTRATION_LOW         = 0.80   # std > 100px
+CONCENTRATION_MIN_ENEMIES = 2      # <= this: skip concentration calc
+
+# sec6.5 detection confidence weight
+CONF_WEIGHT_VERY_HIGH = 1.00   # conf >= 0.90
+CONF_WEIGHT_HIGH      = 0.95   # conf 0.75-0.89
+CONF_WEIGHT_MEDIUM    = 0.85   # conf 0.60-0.74
+CONF_WEIGHT_LOW       = 0.70   # conf < 0.60
+
+
+# -- helpers ------------------------------------------------------------------
+
+def _center(box: Any):
+    x1, y1, x2, y2 = box.bbox
+    return (x1 + x2) / 2.0, (y1 + y2) / 2.0
+
+
+def _conf_weight(conf: float) -> float:
+    if conf >= 0.90:
+        return CONF_WEIGHT_VERY_HIGH
+    elif conf >= 0.75:
+        return CONF_WEIGHT_HIGH
+    elif conf >= 0.60:
+        return CONF_WEIGHT_MEDIUM
+    else:
+        return CONF_WEIGHT_LOW
+
+
+def _advantage_factor(ally_count: int, enemy_count: int) -> float:
+    diff = enemy_count - ally_count
+    if diff > 2:
+        return ADVANTAGE_LARGE_LOSS
+    elif diff == 2:
+        return ADVANTAGE_MID_LOSS
+    elif diff == 1:
+        return ADVANTAGE_SMALL_LOSS
+    elif diff == 0:
+        return ADVANTAGE_EQUAL
+    else:
+        return ADVANTAGE_GAIN
+
+
+def _concentration_factor(enemies: list) -> float:
+    if len(enemies) <= CONCENTRATION_MIN_ENEMIES:
+        return CONCENTRATION_MEDIUM
+    positions = [_center(e) for e in enemies]
+    mx = sum(p[0] for p in positions) / len(positions)
+    my = sum(p[1] for p in positions) / len(positions)
+    variance = sum((p[0]-mx)**2 + (p[1]-my)**2 for p in positions) / len(positions)
+    std = math.sqrt(variance)
+    if std < 30:
+        return CONCENTRATION_VERY_HIGH
+    elif std < 60:
+        return CONCENTRATION_HIGH
+    elif std < 100:
+        return CONCENTRATION_MEDIUM
+    else:
+        return CONCENTRATION_LOW
+
+
+def _weighted_distance_points(my_pos: Any, enemies: list) -> float:
+    mx, my = _center(my_pos)
+    total = 0.0
+    for e in enemies:
+        ex, ey = _center(e)
+        dist = math.sqrt((mx - ex)**2 + (my - ey)**2)
+        if dist <= DANGER_RADIUS_HIGH:
+            base = 40.0
+        elif dist <= DANGER_RADIUS_MID:
+            base = 20.0
+        else:
+            base = 0.0
+        conf = getattr(e, "top1_conf", 0.5)
+        total += base * _conf_weight(conf)
+    return total
+
+
+# -- main class ---------------------------------------------------------------
 
 class RiskAnalyzer:
     """
-    Analyzes minimap detections and calculates risk score.
+    Minimap detection result -> risk score 0-100.
 
-    Risk Score (0-100):
-        0-30:   Safe (Green) - No threat detected
-        31-65:  Caution (Yellow) - Moderate threat, be aware
-        66-100: Danger (Red) - High threat, immediate attention needed
-
-    Risk Calculation Factors:
-        1. Enemy Champions (30%):
-           - More champions nearby = higher risk
-        2. Threat Proximity (40%):
-           - Tower/Dragon/Baron proximity = higher risk
-        3. Activity Level (30%):
-           - Recent movement intensity in last 5s = urgency
+    Risk zones (official rules sec2.2):
+        0-30   : safe   (green)
+        31-65  : caution (yellow)
+        66-100 : danger  (red) - triggers LLM auto call
     """
 
-    # Risk thresholds
-    THRESHOLD_AUTO_ALERT = 65  # Auto-alert when risk > this
-    MIN_ALERT_INTERVAL = 5  # Minimum seconds between alerts
+    def __init__(self) -> None:
+        self._last_alert_t: float = 0.0
+        self.last_risk: float = 0.0
 
-    # Class importance weights (for threat assessment)
-    CLASS_WEIGHTS = {
-        "enemy_champion": 0.8,
-        "ally_champion": 0.0,  # Friendly, no threat
-        "tower": 0.6,
-        "dragon": 0.7,
-        "baron": 0.8,
-        "inhibitor": 0.5,
-        "turret": 0.6,  # Alias for tower
-    }
-
-    # Position zones on minimap
-    # [left, top, right, bottom] as fractions [0..1]
-    ZONES = {
-        "blue_base": [0.0, 0.65, 0.35, 1.0],     # Bottom-left
-        "blue_jungle": [0.0, 0.3, 0.5, 0.8],      # Left side
-        "neutral": [0.3, 0.3, 0.7, 0.7],          # Center
-        "red_jungle": [0.5, 0.2, 1.0, 0.5],       # Right side
-        "red_base": [0.65, 0.0, 1.0, 0.35],       # Top-right
-    }
-
-    def __init__(self):
-        self.last_alert_time = 0.0
-        self.last_risk_score = 0.0
-
-    def calculate_risk(self, summary: Dict) -> float:
+    def calculate_risk(self, result: dict) -> float:
         """
-        Calculate risk score from buffer summary.
+        TwoStageDetectorV2 result dict -> risk 0.0-100.0
 
         Args:
-            summary: Output from RollingBuffer.summarize()
-                {
-                    "frames": int,
-                    "duration": float,
-                    "tracks": {
-                        "class_name": [[time, x, y], ...],
-                        ...
-                    }
-                }
-
-        Returns:
-            Risk score (0.0-100.0)
+            result: {"my_position": DetBox|None, "ally": [...], "enemy": [...]}
         """
-        if not summary or not summary.get("tracks"):
+        enemies = result.get("enemy", [])
+        allies  = result.get("ally",  [])
+        my_pos  = result.get("my_position")
+
+        if not enemies:
+            self.last_risk = 0.0
             return 0.0
 
-        tracks = summary["tracks"]
+        if my_pos is None:
+            # fallback: conservative estimate when own position unknown
+            risk = min(100.0, len(enemies) * 12.0)
+            self.last_risk = risk
+            return risk
 
-        # Factor 1: Enemy Champion Count (30%)
-        champion_risk = self._assess_champion_risk(tracks)
+        # official rules sec2.3.5 final formula
+        wdp  = _weighted_distance_points(my_pos, enemies)
+        adv  = _advantage_factor(len(allies), len(enemies))
+        conc = _concentration_factor(enemies)
 
-        # Factor 2: Threat Proximity (40%)
-        proximity_risk = self._assess_proximity_risk(tracks)
+        risk = min(100.0, wdp * adv * conc)
+        self.last_risk = risk
+        return risk
 
-        # Factor 3: Activity Level (30%)
-        activity_risk = self._assess_activity_risk(tracks, summary.get("duration", 0))
-
-        # Weighted combination
-        total_risk = (
-            champion_risk * 0.30 +
-            proximity_risk * 0.40 +
-            activity_risk * 0.30
-        )
-
-        # Clamp to [0, 100]
-        total_risk = max(0.0, min(100.0, total_risk))
-        self.last_risk_score = total_risk
-
-        return total_risk
-
-    def _assess_champion_risk(self, tracks: Dict[str, List]) -> float:
+    def should_trigger_alert(self, risk: float) -> bool:
         """
-        Assess risk based on enemy champion count.
-        More enemy champions = higher risk.
-        """
-        enemy_count = len(tracks.get("enemy_champion", []))
-        ally_count = len(tracks.get("ally_champion", []))
-
-        # Rough enemy count estimates (based on detection frequency)
-        # 10+ detections ≈ 1 champion
-        estimated_enemies = max(1, enemy_count // 10 + 1)
-        estimated_allies = max(1, ally_count // 10 + 1)
-
-        # Numerical disadvantage amplifies risk
-        if estimated_enemies > estimated_allies:
-            # 3v2 = 1.5x risk, 4v1 = 4x risk
-            number_disadvantage = estimated_enemies / max(1, estimated_allies)
-            return min(100.0, number_disadvantage * 50.0)
-
-        return 0.0
-
-    def _assess_proximity_risk(self, tracks: Dict[str, List]) -> float:
-        """
-        Assess risk based on threats near player.
-        Enemy towers/objectives nearby = higher risk.
-        """
-        risk_scores = []
-
-        # Check last position of each threat type
-        for class_name, positions in tracks.items():
-            weight = self.CLASS_WEIGHTS.get(class_name, 0.0)
-            if weight <= 0.0:
-                continue
-
-            if not positions:
-                continue
-
-            # Get latest position (last detection)
-            latest_pos = positions[-1]  # [time, x, y]
-            x, y = latest_pos[1], latest_pos[2]
-
-            # Check if in dangerous zone
-            if self._is_in_red_zone(x, y):
-                # Enemy territory = very dangerous
-                risk_scores.append(weight * 100.0)
-            elif self._is_in_neutral_zone(x, y):
-                # Neutral zone = moderate danger
-                risk_scores.append(weight * 60.0)
-            elif self._is_nearby(x, y, radius=0.3):
-                # Close to player = dangerous
-                risk_scores.append(weight * 80.0)
-
-        if not risk_scores:
-            return 0.0
-
-        # Return max risk (worst threat)
-        return min(100.0, max(risk_scores))
-
-    def _assess_activity_risk(self, tracks: Dict[str, List], duration: float) -> float:
-        """
-        Assess urgency based on recent activity.
-        High activity = urgent situation = higher risk.
-        """
-        if duration < 1.0:
-            return 0.0
-
-        # Count detections in last 5 seconds
-        last_5s_count = 0
-        cutoff_time = duration - 5.0
-
-        for positions in tracks.values():
-            for time_rel, _, _ in positions:
-                if time_rel >= cutoff_time:
-                    last_5s_count += 1
-
-        # More detections = more activity = more urgent
-        # 0 detections = 0%, 50+ detections = 100%
-        activity_level = min(100.0, (last_5s_count / 50.0) * 100.0)
-        return activity_level
-
-    def should_trigger_alert(self, risk_score: float) -> bool:
-        """
-        Check if alert should be triggered.
-        Conditions:
-        - Risk score > THRESHOLD
-        - Minimum interval since last alert
+        Official rules sec1.1: risk >= RISK_AUTO_ALERT AND cooldown elapsed.
+        Updates internal timer when returning True.
         """
         now = time.time()
-        time_since_last = now - self.last_alert_time
+        if risk >= RISK_AUTO_ALERT and (now - self._last_alert_t) >= RISK_ALERT_COOLDOWN:
+            self._last_alert_t = now
+            return True
+        return False
 
-        should_alert = (
-            risk_score > self.THRESHOLD_AUTO_ALERT
-            and time_since_last >= self.MIN_ALERT_INTERVAL
-        )
-
-        if should_alert:
-            self.last_alert_time = now
-
-        return should_alert
-
-    @staticmethod
-    def _is_in_red_zone(x: float, y: float) -> bool:
-        """Check if position is in red team zone (enemy territory)."""
-        return x > 0.65 and y < 0.35
-
-    @staticmethod
-    def _is_in_blue_zone(x: float, y: float) -> bool:
-        """Check if position is in blue team zone (safe territory)."""
-        return x < 0.35 and y > 0.65
-
-    @staticmethod
-    def _is_in_neutral_zone(x: float, y: float) -> bool:
-        """Check if position is in neutral zone (risky)."""
-        return 0.3 < x < 0.7 and 0.3 < y < 0.7
-
-    @staticmethod
-    def _is_nearby(x: float, y: float, radius: float = 0.3) -> bool:
-        """
-        Check if position is near player (assumed center).
-        Player is assumed at minimap center (0.5, 0.5).
-        """
-        player_x, player_y = 0.5, 0.5
-        distance = ((x - player_x) ** 2 + (y - player_y) ** 2) ** 0.5
-        return distance < radius
+    def reset_cooldown(self) -> None:
+        """Force-reset cooldown (e.g. after manual F9 request)."""
+        self._last_alert_t = 0.0
