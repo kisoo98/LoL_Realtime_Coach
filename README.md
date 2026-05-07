@@ -89,7 +89,7 @@ capture:
 ```bash
 conda activate lolcoach
 cd LoL_Realtime_Coach
-python poc/integrated_main.py
+python main.py
 ```
 
 ### 핫키
@@ -135,7 +135,7 @@ python tests/test_risk_analyzer.py
 
 ```
 poc/
-  integrated_main.py       # 진입점 (python poc/integrated_main.py)
+  integrated_main.py       # 진입점 (python main.py)
   integrated_yolo.py       # YOLO + 위험도 + Gemini 스레드
   integrated_live.py       # Live Client API 스레드
   integrated_overlay.py    # PyQt6 오버레이 UI
