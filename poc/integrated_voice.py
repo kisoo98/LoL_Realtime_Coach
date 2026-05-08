@@ -21,7 +21,11 @@ try:
     import pygame  # type: ignore
     pygame.mixer.init()
     TTS_AVAILABLE = True
-except Exception:  # pragma: no cover - 의존성 미설치 환경
+except ImportError as e:
+    logger.warning(f"TTS 비활성 — 패키지 미설치: {e}  →  pip install gtts pygame")
+    TTS_AVAILABLE = False
+except Exception as e:
+    logger.warning(f"TTS 비활성 — pygame 초기화 실패: {e}")
     TTS_AVAILABLE = False
 
 
@@ -33,11 +37,26 @@ class VoiceThread(QThread):
         # queue.Queue: put()/get() 모두 스레드 안전 (내장 Lock)
         self._queue: queue.Queue[str] = queue.Queue()
         self.running = True
+        # speak() 호출 시 현재 재생 중인 음성을 즉시 스킵하는 플래그
+        self._skip_current: bool = False
 
     def speak(self, text: str) -> None:
-        """메인/다른 스레드에서 호출해도 안전."""
-        if TTS_AVAILABLE:
-            self._queue.put(text)
+        """메인/다른 스레드에서 호출해도 안전.
+
+        적체된 이전 메시지를 모두 버리고 최신 메시지만 큐에 넣는다.
+        현재 재생 중인 음성도 스킵해 즉각 반응하도록 한다.
+        """
+        if not TTS_AVAILABLE:
+            return
+        # 적체된 구 메시지 제거 (최신 1개만 유지)
+        while not self._queue.empty():
+            try:
+                self._queue.get_nowait()
+            except queue.Empty:
+                break
+        self._queue.put(text)
+        # 현재 재생 중이던 음성을 즉시 중단
+        self._skip_current = True
 
     def run(self) -> None:
         while self.running:
@@ -47,6 +66,7 @@ class VoiceThread(QThread):
             except queue.Empty:
                 continue
 
+            self._skip_current = False  # 새 메시지 처리 시작, 플래그 리셋
             try:
                 tts = gTTS(text=text, lang="ko")
                 # NamedTemporaryFile: 충돌 없는 임시 경로
@@ -55,8 +75,11 @@ class VoiceThread(QThread):
                 tts.save(tmp_path)
                 pygame.mixer.music.load(tmp_path)
                 pygame.mixer.music.play()
-                while pygame.mixer.music.get_busy() and self.running:
+                # _skip_current 플래그 감지 시 즉시 재생 중단
+                while pygame.mixer.music.get_busy() and self.running and not self._skip_current:
                     time.sleep(0.1)
+                if self._skip_current:
+                    pygame.mixer.music.stop()
                 pygame.mixer.music.unload()
                 try:
                     os.remove(tmp_path)

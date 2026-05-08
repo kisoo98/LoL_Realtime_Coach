@@ -11,7 +11,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import keyboard
-from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtCore import Qt, QTimer, QPoint
 from PyQt6.QtGui import QBrush, QColor, QFont, QPainter, QPen
 from PyQt6.QtWidgets import QApplication, QWidget
 from loguru import logger
@@ -53,10 +53,21 @@ class IntegratedOverlay(QWidget):
 
     # ── 초기화 ───────────────────────────────────────────────────────────────
     def _init_ui(self) -> None:
-        screen = QApplication.primaryScreen()
+        # 🔥 듀얼 모니터 환경: 현재 마우스 커서 위치의 스크린 감지
+        app = QApplication.instance()
+        screen = self._get_screen_at_cursor()
+        if screen is None:
+            # Fallback: primaryScreen
+            screen = app.primaryScreen()
+            logger.warning("⚠️ 마우스 커서 스크린 감지 실패 → Primary Screen 사용")
+
         geo    = screen.geometry()
         self.screen_w = geo.width()
         self.screen_h = geo.height()
+        self.screen_x = geo.x()  # 스크린 좌상단 X 좌표 (듀얼 모니터 대비)
+        self.screen_y = geo.y()  # 스크린 좌상단 Y 좌표
+
+        logger.info(f"스크린 감지: {self.screen_w}x{self.screen_h} @ ({self.screen_x}, {self.screen_y})")
 
         self.setGeometry(geo)
         self.setWindowTitle("LoL Realtime Coach — 최종 PoC")
@@ -88,10 +99,26 @@ class IntegratedOverlay(QWidget):
         self._live.champ_list_signal.connect(self._yolo.set_champ_list)
         self._live.start()
 
+    def _get_screen_at_cursor(self):
+        """현재 마우스 커서가 있는 스크린 반환 (듀얼 모니터 대응)."""
+        try:
+            app = QApplication.instance()
+            cursor_pos = QApplication.instance().primaryScreen().virtualGeometry().topLeft()
+            # 모든 스크린에서 현재 마우스 위치 찾기
+            for screen in app.screens():
+                if screen.geometry().contains(cursor_pos):
+                    return screen
+            # 찾지 못한 경우: Primary Screen 반환
+            return app.primaryScreen()
+        except Exception as e:
+            logger.warning(f"스크린 감지 오류: {e}")
+            return None
+
     def _init_hotkeys(self) -> None:
         try:
-            keyboard.add_hotkey("f9",           self._yolo.request_manual)
-            keyboard.add_hotkey("ctrl+shift+q", self._on_quit)
+            # 🔥 suppress=False: 키 이벤트가 계속 전파되도록 (마우스 간섭 방지)
+            keyboard.add_hotkey("f9",           self._yolo.request_manual, suppress=False)
+            keyboard.add_hotkey("ctrl+shift+q", self._on_quit, suppress=False)
             logger.info("핫키 등록: F9(수동피드백), Ctrl+Shift+Q(종료)")
         except Exception as e:
             logger.warning(f"핫키 등록 실패: {e}")
@@ -117,7 +144,19 @@ class IntegratedOverlay(QWidget):
         self.repaint()
 
     def _on_live_update(self, data: dict) -> None:
+        prev_status       = self._game_status
         self._game_status = data.get("status", "waiting")
+
+        # 게임 종료 감지: ingame → waiting 전환 시 표시 중인 팁 전체 초기화
+        if prev_status == "ingame" and self._game_status == "waiting":
+            self._llm_text    = ""
+            self._llm_timer   = 0
+            self._live_tip    = ""
+            self._live_timer  = 0
+            self._event_tip   = ""
+            self._event_timer = 0
+            self._risk        = 0.0
+
         if self._game_status == "waiting":
             self._status_msg = data.get("msg", "대기 중...")
         else:
@@ -153,6 +192,8 @@ class IntegratedOverlay(QWidget):
         self.repaint()
 
     def _shutdown(self) -> None:
+        # 먼저 창을 즉시 숨겨 스레드 종료 대기 중 잔상이 남지 않도록 한다
+        self.hide()
         self._yolo.stop()
         self._live.stop()
         self._voice.stop()
@@ -170,19 +211,20 @@ class IntegratedOverlay(QWidget):
         MR = 20
         X  = self.screen_w - W - MR
 
-        # status bar
-        risk_color = (
-            QColor(255, 80, 80)   if self._risk >= RISK_AUTO_ALERT else
-            QColor(255, 200, 50)  if self._risk >= 35              else
-            QColor(120, 220, 120)
-        )
-        p.setPen(QPen(risk_color))
-        p.setFont(QFont("Malgun Gothic", 9))
-        p.drawText(
-            10, 10, 800, 24,
-            Qt.AlignmentFlag.AlignLeft,
-            "LoL Coach B  |  Risk: {:.0f}%  |  {}".format(self._risk, self._status_msg),
-        )
+        # status bar — 인게임일 때만 표시 (대기 중에는 잔상 방지)
+        if self._game_status == "ingame":
+            risk_color = (
+                QColor(255, 80, 80)   if self._risk >= RISK_AUTO_ALERT else
+                QColor(255, 200, 50)  if self._risk >= 35              else
+                QColor(120, 220, 120)
+            )
+            p.setPen(QPen(risk_color))
+            p.setFont(QFont("Malgun Gothic", 9))
+            p.drawText(
+                10, 10, 800, 24,
+                Qt.AlignmentFlag.AlignLeft,
+                "LoL Coach B  |  Risk: {:.0f}%  |  {}".format(self._risk, self._status_msg),
+            )
 
         # waiting banner
         if self._game_status == "waiting" and not self._llm_text:

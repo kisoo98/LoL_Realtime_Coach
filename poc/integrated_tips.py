@@ -19,20 +19,26 @@ def strip_emoji(text: str) -> str:
 
 
 def make_coaching_tip(hp_pct: float, gold: float, game_time: float) -> str:
-    """체력/골드/게임시간 기반 규칙 팁."""
+    """체력/골드/게임시간 기반 규칙 팁.
+
+    골드 팁은 500골드 단위로 스냅해 매 초마다 새 팁으로 인식되는 것을 방지.
+    조건에 해당 없으면 빈 문자열 반환 (TTS 잡음 방지).
+    """
     if hp_pct <= 20:
         return "🛑 체력 20% 이하! 귀환을 고려하세요."
     if gold >= 1500:
-        return f"💰 {int(gold)} 골드 — 코어 아이템 구매 타이밍!"
+        snapped = (int(gold) // 500) * 500  # 1500 / 2000 / 2500 … 단위로만 갱신
+        return f"💰 {snapped}+ 골드 — 코어 아이템 구매 타이밍!"
     if gold >= 1100 and game_time < 600:
-        return f"💡 {int(gold)} 골드 — 하위템 구매 후 압박하세요."
+        snapped = (int(gold) // 100) * 100  # 100골드 단위로 스냅
+        return f"💡 {snapped}+ 골드 — 하위템 구매 후 압박하세요."
     if game_time < 100:
         return "🔍 초반 시야를 확보하세요."
     if 810 < game_time < 870:
         return "⏰ 14분 — 타워 방패 소멸 타이밍!"
     if 1170 < game_time < 1260:
         return "🟣 20분 — 바론 시야 장악 준비!"
-    return "미니맵을 수시로 확인하세요."
+    return ""  # 기본 팁 제거 — 의미 없는 반복 TTS 방지
 
 
 def make_event_tip(ev: dict, my_name: str) -> str:

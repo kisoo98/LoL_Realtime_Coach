@@ -127,11 +127,8 @@ class LiveClientThread(QThread):
                 if new_ev:
                     self._last_event_tip = event_tip
 
+                # TTS는 LLM(Gemini) 피드백 전용 — Live API 팁은 화면 표시만
                 speeches = []
-                if new_tip:
-                    speeches.append(strip_emoji(new_tip))
-                if new_ev:
-                    speeches.append(strip_emoji(new_ev))
 
                 self.update_signal.emit({
                     "status":           "ingame",
