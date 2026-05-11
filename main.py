@@ -2,7 +2,7 @@
 LoL Realtime Coach -- Demo v0.1
 ================================
 실행:
-    conda activate lolcoach
+    conda activate lol
     python main.py
 
 핫키:

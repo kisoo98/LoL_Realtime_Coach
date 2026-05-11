@@ -97,7 +97,7 @@ class YoloCoachThread(QThread):
             capturer = MinimapCapturer(cfg.capture.active_bbox())
             # β 파이프라인: A'(검출) + F(팀 분류) + B(챔피언 분류)
             detector = TwoStageDetectorV2(
-                model_a_path=_REPO_ROOT / "models" / "lol_minimap_1class_l.pt",
+                model_a_path=_REPO_ROOT / "models" / "best.pt",
                 model_b_path=_REPO_ROOT / "models" / "champion_classifier.pt",
                 device=cfg.yolo.device,
                 det_conf=cfg.yolo.conf_threshold,

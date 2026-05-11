@@ -65,7 +65,7 @@ GEMINI_API_KEY=your-actual-key-here
 
 ```
 models/
-  lol_minimap_1class_l.pt     # A' 모델 (챔피언 위치 감지)
+  best.pt     # A' 모델 (챔피언 위치 감지)
   champion_classifier.pt      # B 모델 (챔피언 분류)
 ```
 

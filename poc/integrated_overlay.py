@@ -120,8 +120,9 @@ class IntegratedOverlay(QWidget):
             keyboard.add_hotkey("f9",           self._yolo.request_manual, suppress=False)
             keyboard.add_hotkey("ctrl+shift+q", self._on_quit, suppress=False)
             logger.info("핫키 등록: F9(수동피드백), Ctrl+Shift+Q(종료)")
-        except Exception as e:
-            logger.warning(f"핫키 등록 실패: {e}")
+        except (ImportError, Exception) as e:
+            logger.warning(f"⚠️ 핫키 등록 실패 (WSL/Linux 권한 부족): {e}")
+            logger.info("단축키 대신 GUI 버튼이나 다른 방식을 사용하세요.")
 
     def _init_repaint_timer(self) -> None:
         self._qtimer = QTimer(self)

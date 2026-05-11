@@ -62,6 +62,8 @@ def main() -> None:
     logger.info("=" * 60)
 
     app = QApplication(sys.argv)
+
+
     overlay = IntegratedOverlay()
     overlay.show()
     sys.exit(app.exec())
