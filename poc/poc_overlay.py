@@ -1,9 +1,11 @@
 import sys
 import time
 import os
+import queue
+import tempfile
 from PyQt6.QtWidgets import QApplication, QWidget
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
-from PyQt6.QtGui import QFont, QColor, QPainter, QBrush, QPen, QScreen
+from PyQt6.QtGui import QFont, QColor, QPainter, QBrush, QPen
 
 # 음성 출력을 위한 라이브러리
 from gtts import gTTS
@@ -17,37 +19,47 @@ import live_game
 class VoiceThread(QThread):
     def __init__(self):
         super().__init__()
-        self.queue = []
+        # queue.Queue: put()/get() 모두 스레드 안전 (GIL 외 별도 락 내장)
+        self._queue = queue.Queue()
         pygame.mixer.init()
         self.running = True
 
     def speak(self, text):
-        """외부에서 음성으로 읽을 텍스트를 큐에 넣습니다."""
-        self.queue.append(text)
+        """외부에서 음성으로 읽을 텍스트를 큐에 넣습니다. (스레드 안전)"""
+        self._queue.put(text)
 
     def run(self):
         while self.running:
-            if self.queue:
-                text = self.queue.pop(0)
+            try:
+                # block=True + timeout=0.1 → 0.1초마다 running 재확인
+                text = self._queue.get(block=True, timeout=0.1)
+            except queue.Empty:
+                continue
+
+            try:
+                # 구글 TTS에 요청하여 mp3 생성
+                tts = gTTS(text=text, lang='ko')
+                # 임시 파일: 동시 실행·충돌 방지 + 자동 삭제
+                with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
+                    tmp_path = tmp.name
+                tts.save(tmp_path)
+
+                # pygame을 이용해 mp3 재생
+                pygame.mixer.music.load(tmp_path)
+                pygame.mixer.music.play()
+
+                # 재생이 끝날 때까지 대기
+                while pygame.mixer.music.get_busy() and self.running:
+                    time.sleep(0.1)
+
+                # 파일 잠금 해제 후 임시 파일 삭제
+                pygame.mixer.music.unload()
                 try:
-                    # 구글 TTS에 요청하여 mp3 생성
-                    tts = gTTS(text=text, lang='ko')
-                    filename = "temp_voice.mp3"
-                    tts.save(filename)
-                    
-                    # pygame을 이용해 mp3 재생
-                    pygame.mixer.music.load(filename)
-                    pygame.mixer.music.play()
-                    
-                    # 재생이 끝날 때까지 대기
-                    while pygame.mixer.music.get_busy() and self.running:
-                        time.sleep(0.1)
-                        
-                    # 파일 잠금 해제 (다음 음성이 덮어쓸 수 있도록)
-                    pygame.mixer.music.unload()
-                except Exception as e:
-                    print(f"TTS 재생 오류: {e}")
-            time.sleep(0.1)
+                    os.remove(tmp_path)
+                except OSError:
+                    pass
+            except Exception as e:
+                print(f"TTS 재생 오류: {e}")
 
     def stop(self):
         self.running = False
@@ -55,17 +67,7 @@ class VoiceThread(QThread):
 
 
 # ----------------------------------------------------
-# 2. 2025 시즌 기준 오브젝트 타이머 상수
-# ----------------------------------------------------
-DRAGON_FIRST_SPAWN = 300       # 5:00 첫 용 등장
-DRAGON_RESPAWN = 300           # 5분 간격 리스폰
-VOID_GRUBS_SPAWN = 480         # 8:00 공허 유충 등장
-RIFT_HERALD_SPAWN = 900        # 15:00 전령 등장
-BARON_SPAWN = 1200             # 20:00 바론 등장
-TOWER_PLATE_FALL = 840         # 14:00 타워 방패 소멸
-
-# ----------------------------------------------------
-# 3. 실시간 정보 폴링 스레드
+# 2. 실시간 정보 폴링 스레드
 # ----------------------------------------------------
 class LiveAPIThread(QThread):
     update_signal = pyqtSignal(dict)
@@ -78,148 +80,6 @@ class LiveAPIThread(QThread):
         # 중복 안내 방지용 이전 텍스트 저장
         self.last_coaching_tip = ""
         self.last_event_tip = ""
-        
-        # 오브젝트 타이머 알림 플래그 (한 번만 울림)
-        self.alerted = {
-            "dragon_30s": False,    # 용 등장 30초 전
-            "dragon_spawn": False,  # 용 등장 시점
-            "grubs_30s": False,     # 공허 유충 30초 전
-            "grubs_spawn": False,   # 공허 유충 등장
-            "herald_30s": False,    # 전령 30초 전
-            "herald_spawn": False,  # 전령 등장
-            "baron_60s": False,     # 바론 1분 전
-            "baron_spawn": False,   # 바론 등장
-            "plate_60s": False,     # 방패 소멸 1분 전
-            "plate_fall": False,    # 방패 소멸
-        }
-        
-        # 용/바론 처치 후 리스폰 타이머
-        self.next_dragon_time = DRAGON_FIRST_SPAWN
-        self.dragon_respawn_alerted = False
-        self.next_baron_time = BARON_SPAWN
-        self.baron_respawn_alerted = False
-
-    def _check_objective_timers(self, game_time):
-        """오브젝트 등장 시간 기반 코칭 팁을 반환합니다."""
-        tip = ""
-        
-        # --- 용 타이머 ---
-        if not self.alerted["dragon_30s"] and self.next_dragon_time - 30 <= game_time < self.next_dragon_time:
-            self.alerted["dragon_30s"] = True
-            secs_left = int(self.next_dragon_time - game_time)
-            tip = f"🐉 약 {secs_left}초 후 드래곤이 등장합니다! 봇 라인 시야를 확보하세요."
-        elif not self.alerted["dragon_spawn"] and game_time >= self.next_dragon_time:
-            self.alerted["dragon_spawn"] = True
-            tip = "🐉 드래곤이 등장했습니다! 팀과 함께 용 싸움을 준비하세요."
-        
-        # --- 공허 유충 타이머 ---
-        elif not self.alerted["grubs_30s"] and VOID_GRUBS_SPAWN - 30 <= game_time < VOID_GRUBS_SPAWN:
-            self.alerted["grubs_30s"] = True
-            tip = "🪱 30초 후 공허 유충이 등장합니다. 탑 사이드 시야를 확보하세요."
-        elif not self.alerted["grubs_spawn"] and game_time >= VOID_GRUBS_SPAWN and not self.alerted["grubs_spawn"]:
-            self.alerted["grubs_spawn"] = True
-            tip = "🪱 공허 유충이 등장했습니다! 유충을 빠르게 처리하면 타워 압박에 유리합니다."
-        
-        # --- 전령 타이머 ---
-        elif not self.alerted["herald_30s"] and RIFT_HERALD_SPAWN - 30 <= game_time < RIFT_HERALD_SPAWN:
-            self.alerted["herald_30s"] = True
-            tip = "👁 30초 후 협곡의 전령이 등장합니다. 미리 탑 사이드 시야를 확보하세요."
-        elif not self.alerted["herald_spawn"] and game_time >= RIFT_HERALD_SPAWN and not self.alerted["herald_spawn"]:
-            self.alerted["herald_spawn"] = True
-            tip = "👁 전령이 등장했습니다! 전령을 잡아서 포탑을 밀 수 있습니다."
-        
-        # --- 바론 타이머 ---
-        elif not self.alerted["baron_60s"] and self.next_baron_time - 60 <= game_time < self.next_baron_time:
-            self.alerted["baron_60s"] = True
-            tip = "🟣 1분 후 바론이 등장합니다! 바론 주변 시야를 장악하세요."
-        elif not self.alerted["baron_spawn"] and game_time >= self.next_baron_time and not self.alerted["baron_spawn"]:
-            self.alerted["baron_spawn"] = True
-            tip = "🟣 바론 내셔가 등장했습니다! 팀 합류 후 바론을 노려보세요."
-        
-        # --- 타워 방패 소멸 ---
-        elif not self.alerted["plate_60s"] and TOWER_PLATE_FALL - 60 <= game_time < TOWER_PLATE_FALL:
-            self.alerted["plate_60s"] = True
-            tip = "⏰ 1분 후 타워 방패가 소멸됩니다! 남은 방패골드를 수거하세요."
-        elif not self.alerted["plate_fall"] and game_time >= TOWER_PLATE_FALL and not self.alerted["plate_fall"]:
-            self.alerted["plate_fall"] = True
-            tip = "⏰ 타워 방패가 소멸되었습니다. 이제 로밍과 오브젝트에 집중하세요."
-        
-        return tip
-
-    def _handle_event(self, event, my_name, game_time):
-        """개별 이벤트를 분석하여 코칭 메시지를 반환합니다."""
-        evt_type = event.get("EventName")
-        tip = ""
-        
-        if evt_type == "ChampionKill":
-            killer = event.get("KillerName", "")
-            victim = event.get("VictimName", "")
-            assisters = event.get("Assisters", [])
-            
-            if killer == my_name:
-                tip = "🔥 나이스 킬! 라인을 밀어넣고 귀환 또는 오브젝트를 노리세요."
-            elif victim == my_name:
-                tip = "💀 데스 발생. 부활 전 미니맵을 보고 팀원에게 적 스펠 정보를 공유하세요."
-            elif my_name in assisters:
-                tip = f"🤝 어시스트! {killer} 님의 킬에 기여했습니다. 좋은 협동이에요."
-            else:
-                tip = f"⚔️ 교전 발생! {killer} 님이 {victim} 님을 처치했습니다."
-        
-        elif evt_type == "Multikill":
-            killer = event.get("KillerName", "")
-            kill_streak = event.get("KillStreak", 0)
-            streak_names = {2: "더블킬", 3: "트리플킬", 4: "쿼드라킬", 5: "펜타킬"}
-            streak_text = streak_names.get(kill_streak, f"{kill_streak}연속 킬")
-            if killer == my_name:
-                tip = f"🔥 {streak_text}! 이 기세를 몰아 오브젝트를 챙기세요!"
-            else:
-                tip = f"⚔️ {killer} 님이 {streak_text}을 달성했습니다!"
-                
-        elif evt_type == "DragonKill":
-            killer = event.get("KillerName", "")
-            dragon_type = event.get("DragonType", "")
-            dragon_names = {
-                "Fire": "화염", "Earth": "대지", "Water": "바다",
-                "Air": "바람", "Hextech": "마법공학", "Chemtech": "화학공학",
-                "Elder": "장로"
-            }
-            dname = dragon_names.get(dragon_type, dragon_type)
-            tip = f"🐉 {dname} 용 처치! 다음 용은 약 5분 후 리스폰됩니다."
-            # 리스폰 타이머 갱신
-            self.next_dragon_time = game_time + DRAGON_RESPAWN
-            self.alerted["dragon_30s"] = False
-            self.alerted["dragon_spawn"] = False
-                
-        elif evt_type == "BaronKill":
-            killer = event.get("KillerName", "")
-            tip = "🟣 바론 처치! 바론 버프로 라인을 밀고 이니시를 잡으세요."
-            self.next_baron_time = game_time + 360  # 바론 리스폰 6분
-            self.alerted["baron_60s"] = False
-            self.alerted["baron_spawn"] = False
-        
-        elif evt_type == "HeraldKill":
-            tip = "👁 전령 처치! 전령을 소환해서 포탑을 밀어보세요."
-        
-        elif evt_type == "TurretKilled":
-            turret_id = event.get("TurretKilled", "")
-            killer = event.get("KillerName", "")
-            # 포탑 ID에서 라인 판별
-            if "Mid" in turret_id or "C_" in turret_id:
-                tip = "🏰 미드 포탑 파괴! 미드 라인이 열렸습니다. 시야를 넓히고 사이드 라인 로밍 또는 정글 침입을 시도하세요."
-            elif "Bot" in turret_id or "R_" in turret_id:
-                tip = "🏰 봇 포탑 파괴! 봇 듀오는 미드로 로테이션하여 용 싸움 주도권을 잡으세요."
-            elif "Top" in turret_id or "L_" in turret_id:
-                tip = "🏰 탑 포탑 파괴! 전령/바론 라인 압박이 수월해졌습니다."
-            else:
-                tip = "🏰 포탑이 파괴되었습니다! 열린 라인을 활용해 시야를 확보하세요."
-        
-        elif evt_type == "InhibKilled":
-            tip = "🏰 억제기 파괴! 슈퍼 미니언 압박을 활용해 바론이나 용을 노리세요."
-        
-        elif evt_type == "FirstBlood":
-            tip = "🩸 퍼스트 블러드! 초반 이득을 라인 주도권으로 전환하세요."
-        
-        return tip
 
     def run(self):
         while self.running:
@@ -242,59 +102,69 @@ class LiveAPIThread(QThread):
                 current_gold = active_player.get("currentGold", 0)
                 game_time = stats.get("gameTime", 0)
                 my_name = active_player.get("summonerName", "")
-                my_level = active_player.get("level", 1)
                 
-                # --- 1. 오브젝트 타이머 기반 코칭 (최우선) ---
-                objective_tip = self._check_objective_timers(game_time)
-                
-                # --- 2. 상태 기반 AI 코칭 팁 ---
+                # --- AI 코칭 팁 판별 ---
                 coaching_tip = ""
-                if objective_tip:
-                    coaching_tip = objective_tip
-                elif health_pct <= 20 and curr_health > 0:
+                if health_pct <= 20 and curr_health > 0:
                     coaching_tip = "🛑 체력이 20% 이하로 위험합니다! 무리하지 말고 귀환을 고려하세요."
-                elif current_gold >= 2000:
-                    coaching_tip = f"💰 {int(current_gold)} 골드 보유! 즉시 귀환하여 핵심 아이템을 완성하세요."
-                elif current_gold >= 1300 and game_time < 600:
-                    coaching_tip = f"💡 {int(current_gold)} 골드로 초반 핵심 하위템을 구매하세요."
-                elif game_time < 90:
-                    coaching_tip = "🔍 게임 시작! 적 정글 시작 위치를 파악하고 시야를 확보하세요."
-                elif 1800 < game_time < 2400:
-                    coaching_tip = "⚔️ 후반 진입! 혼자 다니지 말고 팀과 함께 움직이세요."
-                elif game_time >= 2400:
-                    coaching_tip = "🛡 초후반입니다. 한 번의 데스가 게임을 결정합니다. 신중하게!"
+                elif current_gold >= 1500:
+                    coaching_tip = f"💰 현재 {int(current_gold)} 골드 보유. 집에 다녀와서 코어 아이템을 구매할 타이밍입니다!"
+                elif current_gold >= 1100 and game_time < 600:
+                    coaching_tip = f"💡 전술 팁: {int(current_gold)} 골드로 라인전을 압박할 하위템을 구매하세요."
+                elif game_time < 100:
+                    coaching_tip = "초반 시야 장악을 준비하세요. 적 정글 위치 파악이 중요합니다."
+                elif 840 < game_time < 900:
+                    coaching_tip = "⏰ 곧 14분입니다. 타워 방패가 소멸되니 굴려놓은 이득을 수거하세요!"
+                elif 1140 < game_time < 1500:
+                    coaching_tip = "🐉 20분이 다가옵니다. 바론 시야를 장악할 준비를 하세요!"
+                else:
+                    coaching_tip = "미니맵을 수시로 확인하세요."
 
-                # --- 3. 실시간 타임라인 이벤트 판별 ---
+                # --- 실시간 타임라인 이벤트 판별 ---
                 event_tip = ""
                 if len(events) > self.last_event_count:
-                    for evt in events[self.last_event_count:]:
-                        result = self._handle_event(evt, my_name, game_time)
-                        if result:
-                            event_tip = result  # 마지막 의미있는 이벤트 사용
+                    recent_event = events[-1]
+                    evt_type = recent_event.get("EventName")
+                    
+                    if evt_type == "ChampionKill":
+                        killer = recent_event.get("KillerName", "")
+                        victim = recent_event.get("VictimName", "")
+                        if killer == my_name:
+                            event_tip = "🔥 나이스 킬! 이제 라인을 밀어넣고 귀환 타이밍을 잡으세요."
+                        elif victim == my_name:
+                            event_tip = "💀 데스 발생. 부활 전까지 상대 스펠 여부를 브리핑하세요."
+                        else:
+                            event_tip = f"⚔️ 교전 발생! {killer} 님이 {victim} 님을 처치했습니다."
+                            
+                    elif evt_type == "DragonKill":
+                        killer = recent_event.get("KillerName", "")
+                        event_tip = f"🐉 용 처치됨. 상대 정글 동선 예측에 활용하세요! 처치자: {killer}"
+                        
+                    elif evt_type == "TurretKilled":
+                        killer = recent_event.get("KillerName", "")
+                        event_tip = f"🏰 포탑 파괴 알림! 다른 라인으로 로밍 갈 기회입니다."
+                    
                     self.last_event_count = len(events)
 
-                # --- TTS 및 화면 알림 분리 ---
+                # --- 처음 발생한 멘트만 TTS 큐 및 화면 알림에 넣기 위해 분리 ---
                 speeches = []
                 new_coaching_tip = None
-                emoji_chars = "🛑💰💡⏰🐉🪱👁🟣🔍⚔️🛡"
                 
+                # 코칭 팁이 새롭게 바뀌었을 때
                 if coaching_tip and coaching_tip != self.last_coaching_tip:
                     self.last_coaching_tip = coaching_tip
                     new_coaching_tip = coaching_tip
-                    clean = coaching_tip
-                    for ch in emoji_chars:
-                        clean = clean.replace(ch, "")
-                    speeches.append(clean.strip())
+                    # 기호나 이모티콘은 TTS 오류를 방지하기 위해 제거
+                    clean_text = coaching_tip.replace("🛑", "").replace("💰", "").replace("💡", "").replace("⏰", "").replace("🐉", "")
+                    speeches.append(clean_text)
 
+                # 이벤트 알림이 새롭게 발생했을 때
                 new_event_tip = None
-                event_emoji = "🔥💀⚔️🐉🏰🤝🩸"
                 if event_tip and event_tip != self.last_event_tip:
                     self.last_event_tip = event_tip
                     new_event_tip = event_tip
-                    clean = event_tip
-                    for ch in event_emoji:
-                        clean = clean.replace(ch, "")
-                    speeches.append(clean.strip())
+                    clean_text = event_tip.replace("🔥", "").replace("💀", "").replace("⚔️", "").replace("🐉", "").replace("🏰", "")
+                    speeches.append(clean_text)
 
                 packet = {
                     "status": "ingame",
@@ -342,26 +212,17 @@ class CoachingOverlay(QWidget):
         self.thread.start()
 
     def initUI(self):
-        # 실제 주 모니터의 해상도를 동적으로 가져옴 (하드코딩 제거)
-        screen: QScreen = QApplication.primaryScreen()
-        geo = screen.geometry()
-        self.screen_w = geo.width()
-        self.screen_h = geo.height()
-        
-        self.setGeometry(geo)
+        self.setGeometry(0, 0, 1920, 1080)
         self.setWindowTitle('League of Legends AI Coach (PyQt6)')
         
-        # Tool: 테두리없음/풀스크린 게임 위에서 안정적으로 동작하는 플래그
-        # ToolTip 대신 Tool을 쓰면 DirectX/게임 전체화면과의 충돌이 줄어듦
         self.setWindowFlags(
-            Qt.WindowType.WindowStaysOnTopHint |
-            Qt.WindowType.FramelessWindowHint |
-            Qt.WindowType.WindowTransparentForInput |
-            Qt.WindowType.Tool
+            Qt.WindowType.WindowStaysOnTopHint | 
+            Qt.WindowType.FramelessWindowHint | 
+            Qt.WindowType.WindowTransparentForInput | 
+            Qt.WindowType.ToolTip
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        # showFullScreen() 대신 show()를 사용 — 게임 전체화면과 z-order 충돌 방지
-        self.show()
+        self.showFullScreen()
 
     def update_data(self, data):
         self.status = data.get("status")
@@ -406,148 +267,83 @@ class CoachingOverlay(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
+        bg_brush = QBrush(QColor(30, 30, 40, 230))
         text_pen = QPen(QColor(255, 255, 255))
-
-        # ─── 공통 레이아웃 상수 (해상도 독립) ───────────────────────────
-        margin_right = 20
-        banner_w = 300           # 레퍼런스 이미지 기준 배너 너비
-        banner_h = 70            # 배너 높이
-        icon_area = 56           # 좌측 아이콘 영역 너비
-
-        # 우측 고정 x 좌표
-        x_pos = self.screen_w - banner_w - margin_right
-
-        # ─── 대기 상태 ───────────────────────────────────────────────────
+        
         if self.status == "waiting":
-            box_w, box_h = 340, 60
-            box_x = (self.screen_w - box_w) // 2
-            painter.setBrush(QBrush(QColor(30, 30, 40, 220)))
+            painter.setBrush(bg_brush)
             painter.setPen(Qt.PenStyle.NoPen)
-            painter.drawRoundedRect(box_x, 50, box_w, box_h, 12, 12)
+            painter.drawRoundedRect(800, 50, 320, 60, 12, 12)
+            
             painter.setPen(text_pen)
             painter.setFont(QFont("Malgun Gothic", 12, QFont.Weight.Bold))
-            painter.drawText(box_x, 50, box_w, box_h,
-                             Qt.AlignmentFlag.AlignCenter,
-                             self.msg)
-            painter.end()
-            return
+            painter.drawText(800, 50, 320, 60, Qt.AlignmentFlag.AlignCenter, self.msg)
+            
+        elif self.status == "ingame":
+            base_y = 150
+            margin_right = 20
+            width = 540
+            height = 55
+            x_pos = 1920 - width - margin_right
 
-        # ─── 인게임 상태 ─────────────────────────────────────────────────
-        # 레퍼런스 이미지: 배너가 미니맵 바로 위, 화면 세로 약 55% 지점에 위치
-        # 해상도 독립적으로 screen_h 비율로 계산
-        lower_anchor_y = int(self.screen_h * 0.55)  # 미니맵 위 경고/이벤트 배너 y
+            # 💡 1. 메인 코칭 배너 / 경고 배너
+            if self.current_coaching_tip:
+                # 🛑 이 포함되어 있는지로 경고성 멘트 여부 판단
+                is_warning = "🛑" in self.current_coaching_tip
+                
+                if is_warning:
+                    # 사진처럼 하단 챔피언 포트레이트 바로 위쪽(우측 중간)으로 위치 변경!
+                    warn_y = 570
+                    warn_height = 65
+                    
+                    # 붉은 반투명 배경 및 선명한 붉은색 테두리
+                    painter.setBrush(QBrush(QColor(180, 40, 40, 220))) 
+                    border_pen = QPen(QColor(255, 80, 80, 255))
+                    border_pen.setWidth(2)
+                    painter.setPen(border_pen)
+                    
+                    # 모서리가 많이 둥근 테두리
+                    painter.drawRoundedRect(x_pos, warn_y, width, warn_height, 15, 15)
+                    
+                    # 다시 텍스트 작성용 흰색 펜으로 복귀
+                    painter.setPen(text_pen)
+                    painter.setFont(QFont("Malgun Gothic", 12, QFont.Weight.Bold))
+                    
+                    # 텍스트 앞에 경고 기호로 대체 삽입
+                    warn_text = self.current_coaching_tip.replace("🛑", "⚠ 경고:")
+                    
+                    flags = int(Qt.AlignmentFlag.AlignVCenter) | int(Qt.AlignmentFlag.AlignLeft) | int(Qt.TextFlag.TextWordWrap)
+                    painter.drawText(x_pos + 20, warn_y, width - 30, warn_height, flags, warn_text)
+                    
+                else:
+                    painter.setBrush(QBrush(QColor(43, 33, 43, 230))) 
+                    painter.setPen(Qt.PenStyle.NoPen)
+                    
+                    painter.drawRoundedRect(x_pos, base_y, width, height, 10, 10)
+                    
+                    painter.setBrush(QBrush(QColor(255, 105, 180))) 
+                    painter.drawRoundedRect(x_pos, base_y, 6, height, 3, 3)
 
-        # ── 헬퍼: 레퍼런스 스타일 배너 그리기 ──────────────────────────
-        def draw_banner(y, bg_color, icon_color, icon_char, message, font_size=11):
-            """레퍼런스 이미지 스타일의 좌측 아이콘 + 텍스트 배너를 그립니다."""
-            # 배경
-            painter.setBrush(QBrush(bg_color))
-            painter.setPen(Qt.PenStyle.NoPen)
-            painter.drawRoundedRect(x_pos, y, banner_w, banner_h, 12, 12)
+                    painter.setPen(text_pen)
+                    painter.setFont(QFont("Malgun Gothic", 10, QFont.Weight.Bold))
+                    
+                    flags = int(Qt.AlignmentFlag.AlignVCenter) | int(Qt.AlignmentFlag.AlignLeft) | int(Qt.TextFlag.TextWordWrap)
+                    painter.drawText(x_pos + 15, base_y, width - 25, height, flags, self.current_coaching_tip)
+                    
+                    base_y += height + 10 
 
-            # 좌측 아이콘 영역 (더 진한 색으로 구분)
-            icon_bg = QColor(bg_color)
-            icon_bg.setAlpha(255)
-            icon_bg = icon_bg.darker(130)
-            painter.setBrush(QBrush(icon_bg))
-            painter.drawRoundedRect(x_pos, y, icon_area, banner_h, 12, 12)
-            # 아이콘 영역 오른쪽 모서리는 직각으로 처리
-            painter.drawRect(x_pos + icon_area - 12, y, 12, banner_h)
-
-            # 아이콘 텍스트 (삼각형 경고 기호 등)
-            painter.setPen(QPen(icon_color))
-            painter.setFont(QFont("Malgun Gothic", 20, QFont.Weight.Bold))
-            painter.drawText(x_pos, y, icon_area, banner_h,
-                             Qt.AlignmentFlag.AlignCenter, icon_char)
-
-            # 메시지 텍스트
-            painter.setPen(text_pen)
-            painter.setFont(QFont("Malgun Gothic", font_size, QFont.Weight.Bold))
-            flags = (int(Qt.AlignmentFlag.AlignVCenter) |
-                     int(Qt.AlignmentFlag.AlignLeft) |
-                     int(Qt.TextFlag.TextWordWrap))
-            painter.drawText(x_pos + icon_area + 8, y,
-                             banner_w - icon_area - 14, banner_h,
-                             flags, message)
-
-        # ── 1. 우측 상단 일반 코칭 팁 (작은 배너) ───────────────────────
-        if self.current_coaching_tip and "🛑" not in self.current_coaching_tip:
-            tip_w = 320
-            tip_h = 50
-            tip_x = self.screen_w - tip_w - margin_right
-            painter.setBrush(QBrush(QColor(20, 20, 35, 210)))
-            painter.setPen(Qt.PenStyle.NoPen)
-            painter.drawRoundedRect(tip_x, 80, tip_w, tip_h, 10, 10)
-            # 왼쪽 액센트 바
-            painter.setBrush(QBrush(QColor(255, 105, 180)))
-            painter.drawRoundedRect(tip_x, 80, 5, tip_h, 3, 3)
-            painter.setPen(text_pen)
-            painter.setFont(QFont("Malgun Gothic", 9, QFont.Weight.Bold))
-            flags = (int(Qt.AlignmentFlag.AlignVCenter) |
-                     int(Qt.AlignmentFlag.AlignLeft) |
-                     int(Qt.TextFlag.TextWordWrap))
-            clean_tip = self.current_coaching_tip
-            for ch in "🛑💰💡⏰🐉🪱👁🟣🔍⚔️🛡":
-                clean_tip = clean_tip.replace(ch, "")
-            painter.drawText(tip_x + 12, 80, tip_w - 18, tip_h, flags, clean_tip.strip())
-
-        # ── 2. 경고 배너 — 레퍼런스 이미지 위치 (우측 중하단) ──────────
-        if self.current_coaching_tip and "🛑" in self.current_coaching_tip:
-            warn_text = self.current_coaching_tip.replace("🛑", "").strip()
-            draw_banner(
-                y=lower_anchor_y,
-                bg_color=QColor(190, 30, 30, 230),   # 진한 붉은색
-                icon_color=QColor(255, 230, 0),       # 노란 경고 삼각형
-                icon_char="▲",
-                message=warn_text,
-                font_size=11
-            )
-
-        # ── 3. 이벤트 알림 배너 — 경고 바로 위 or 단독으로 같은 위치 ────
-        if self.current_event_tip:
-            # 경고 배너가 있으면 그 위에, 없으면 같은 위치
-            has_warning = bool(self.current_coaching_tip and "🛑" in self.current_coaching_tip)
-            evt_y = lower_anchor_y - banner_h - 10 if has_warning else lower_anchor_y
-
-            # 이벤트 종류에 따라 색상과 아이콘 결정
-            tip_text = self.current_event_tip
-            if "🐉" in tip_text:
-                bg = QColor(180, 80, 20, 220)   # 주황
-                icon_col = QColor(255, 200, 50)
-                icon = "🐉"
-            elif "🟣" in tip_text or "바론" in tip_text:
-                bg = QColor(100, 30, 160, 220)  # 보라
-                icon_col = QColor(220, 150, 255)
-                icon = "◉"
-            elif "🏰" in tip_text:
-                bg = QColor(30, 90, 180, 220)   # 파랑
-                icon_col = QColor(150, 210, 255)
-                icon = "🏰"
-            elif "💀" in tip_text:
-                bg = QColor(60, 60, 60, 230)    # 어두운 회색
-                icon_col = QColor(200, 200, 200)
-                icon = "💀"
-            elif "🔥" in tip_text:
-                bg = QColor(200, 100, 0, 220)   # 주황-노랑
-                icon_col = QColor(255, 220, 80)
-                icon = "★"
-            else:
-                bg = QColor(30, 100, 60, 220)   # 초록
-                icon_col = QColor(150, 255, 180)
-                icon = "ⓘ"
-
-            # 이모지 제거 후 텍스트만 출력
-            clean_evt = tip_text
-            for ch in "🔥💀⚔️🐉🏰🤝🩸🟣👁":
-                clean_evt = clean_evt.replace(ch, "")
-            draw_banner(
-                y=evt_y,
-                bg_color=bg,
-                icon_color=icon_col,
-                icon_char=icon,
-                message=clean_evt.strip(),
-                font_size=10
-            )
+            # 🔔 2. 우측 상단 긴급 알림 배너 (일반 이벤트)
+            if self.current_event_tip:
+                painter.setBrush(QBrush(QColor(56, 128, 255, 220)))
+                painter.setPen(Qt.PenStyle.NoPen)
+                
+                painter.drawRoundedRect(x_pos, base_y, width, height, 10, 10)
+                
+                painter.setPen(text_pen)
+                painter.setFont(QFont("Malgun Gothic", 10, QFont.Weight.Bold))
+                
+                flags = int(Qt.AlignmentFlag.AlignVCenter) | int(Qt.AlignmentFlag.AlignLeft) | int(Qt.TextFlag.TextWordWrap)
+                painter.drawText(x_pos + 15, base_y, width - 25, height, flags, f"ⓘ {self.current_event_tip}")
 
         painter.end()
 

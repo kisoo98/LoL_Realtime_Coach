@@ -1,0 +1,374 @@
+"""
+인게임 컨트롤러 위젯.
+
+게임 화면 위에 작은 드래그 가능한 패널을 띄워
+TTS / YOLO / Live API 토글, 수동 피드백 요청, 종료 등을 제공한다.
+Ctrl+Shift+C 핫키로 보이기/숨기기 전환 가능.
+"""
+from __future__ import annotations
+
+from PyQt6.QtCore import Qt, QPoint, pyqtSignal
+from PyQt6.QtGui import (
+    QColor, QFont, QLinearGradient, QPainter, QPainterPath,
+    QPen, QBrush, QMouseEvent, QPaintEvent,
+)
+from PyQt6.QtWidgets import QWidget, QApplication
+from loguru import logger
+
+
+class _ToggleSwitch(QWidget):
+    """작은 ON/OFF 토글 스위치 위젯."""
+
+    toggled = pyqtSignal(bool)
+
+    def __init__(self, label: str, initial: bool = True, parent=None):
+        super().__init__(parent)
+        self._label = label
+        self._checked = initial
+        self.setFixedSize(130, 32)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    @property
+    def checked(self) -> bool:
+        return self._checked
+
+    @checked.setter
+    def checked(self, val: bool):
+        self._checked = val
+        self.update()
+
+    def mousePressEvent(self, ev: QMouseEvent):
+        self._checked = not self._checked
+        self.toggled.emit(self._checked)
+        self.update()
+
+    def paintEvent(self, ev: QPaintEvent):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        # 라벨
+        p.setPen(QPen(QColor(220, 220, 230)))
+        p.setFont(QFont("Malgun Gothic", 9))
+        p.drawText(0, 0, 70, 32, Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft, self._label)
+
+        # 트랙
+        track_x, track_y, track_w, track_h = 75, 6, 48, 20
+        track_radius = track_h // 2
+
+        if self._checked:
+            track_color = QColor(80, 180, 120)
+        else:
+            track_color = QColor(100, 100, 110)
+
+        p.setBrush(QBrush(track_color))
+        p.setPen(Qt.PenStyle.NoPen)
+        p.drawRoundedRect(track_x, track_y, track_w, track_h, track_radius, track_radius)
+
+        # 노브
+        knob_radius = 14
+        knob_y = track_y + (track_h - knob_radius) // 2
+        if self._checked:
+            knob_x = track_x + track_w - knob_radius - 2
+            knob_color = QColor(255, 255, 255)
+        else:
+            knob_x = track_x + 2
+            knob_color = QColor(180, 180, 180)
+
+        p.setBrush(QBrush(knob_color))
+        p.drawEllipse(knob_x, knob_y, knob_radius, knob_radius)
+
+        p.end()
+
+
+class _ActionButton(QWidget):
+    """간단한 커스텀 버튼 위젯."""
+
+    clicked = pyqtSignal()
+
+    def __init__(self, text: str, color: QColor, parent=None):
+        super().__init__(parent)
+        self._text = text
+        self._base_color = color
+        self._hover = False
+        self.setFixedSize(130, 30)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    def enterEvent(self, ev):
+        self._hover = True
+        self.update()
+
+    def leaveEvent(self, ev):
+        self._hover = False
+        self.update()
+
+    def mousePressEvent(self, ev: QMouseEvent):
+        self.clicked.emit()
+
+    def paintEvent(self, ev: QPaintEvent):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        c = self._base_color.lighter(125) if self._hover else self._base_color
+        p.setBrush(QBrush(c))
+        p.setPen(Qt.PenStyle.NoPen)
+        p.drawRoundedRect(0, 0, self.width(), self.height(), 8, 8)
+
+        p.setPen(QPen(QColor(255, 255, 255)))
+        p.setFont(QFont("Malgun Gothic", 9, QFont.Weight.Bold))
+        p.drawText(0, 0, self.width(), self.height(), Qt.AlignmentFlag.AlignCenter, self._text)
+        p.end()
+
+
+class _VolumeSlider(QWidget):
+    """수평 음량 슬라이더 (0.0 ~ 1.0)."""
+
+    volume_changed = pyqtSignal(float)
+
+    def __init__(self, initial: float = 0.7, parent=None):
+        super().__init__(parent)
+        self._volume = max(0.0, min(1.0, initial))
+        self._dragging = False
+        self.setFixedSize(130, 36)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    @property
+    def volume(self) -> float:
+        return self._volume
+
+    @volume.setter
+    def volume(self, val: float):
+        self._volume = max(0.0, min(1.0, val))
+        self.update()
+
+    def _vol_from_x(self, x: float) -> float:
+        """위젯 X좌표 → 0.0~1.0 볼륨값."""
+        track_x, track_w = 10, 110
+        return max(0.0, min(1.0, (x - track_x) / track_w))
+
+    def mousePressEvent(self, ev: QMouseEvent):
+        self._dragging = True
+        self._volume = self._vol_from_x(ev.position().x())
+        self.volume_changed.emit(self._volume)
+        self.update()
+
+    def mouseMoveEvent(self, ev: QMouseEvent):
+        if self._dragging:
+            self._volume = self._vol_from_x(ev.position().x())
+            self.volume_changed.emit(self._volume)
+            self.update()
+
+    def mouseReleaseEvent(self, ev: QMouseEvent):
+        self._dragging = False
+
+    def paintEvent(self, ev: QPaintEvent):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        track_x, track_y, track_w, track_h = 10, 18, 110, 6
+
+        # 라벨
+        p.setPen(QPen(QColor(200, 200, 210)))
+        p.setFont(QFont("Malgun Gothic", 8))
+        pct = int(self._volume * 100)
+        p.drawText(0, 0, 130, 16, Qt.AlignmentFlag.AlignLeft, f"🔈 음량  {pct}%")
+
+        # 트랙 배경
+        p.setBrush(QBrush(QColor(60, 60, 70)))
+        p.setPen(Qt.PenStyle.NoPen)
+        p.drawRoundedRect(track_x, track_y, track_w, track_h, 3, 3)
+
+        # 채워진 부분
+        fill_w = int(track_w * self._volume)
+        if fill_w > 0:
+            p.setBrush(QBrush(QColor(80, 180, 220)))
+            p.drawRoundedRect(track_x, track_y, fill_w, track_h, 3, 3)
+
+        # 핸들 (노브)
+        knob_r = 10
+        knob_x = track_x + fill_w - knob_r // 2
+        knob_y = track_y + track_h // 2 - knob_r // 2
+        p.setBrush(QBrush(QColor(255, 255, 255)))
+        p.drawEllipse(knob_x, knob_y, knob_r, knob_r)
+
+        p.end()
+
+
+class ControllerPanel(QWidget):
+    """드래그 가능한 인게임 컨트롤러 패널.
+
+    시그널을 통해 IntegratedOverlay와 통신한다.
+    """
+
+    # 부모(IntegratedOverlay)가 연결할 시그널
+    tts_toggled  = pyqtSignal(bool)
+    yolo_toggled = pyqtSignal(bool)
+    live_toggled = pyqtSignal(bool)
+    volume_changed = pyqtSignal(float)
+    manual_feedback_requested = pyqtSignal()
+    quit_requested = pyqtSignal()
+
+    PANEL_W = 170
+    PANEL_H = 320  # 타이틀바 + 토글 3개 + 슬라이더 + 버튼 2개 + 여백
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._drag_pos: QPoint | None = None
+        self._collapsed = False
+
+        self.setWindowTitle("Coach Controller")
+        self.setWindowFlags(
+            Qt.WindowType.WindowStaysOnTopHint |
+            Qt.WindowType.FramelessWindowHint  |
+            Qt.WindowType.Tool
+        )
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setFixedSize(self.PANEL_W, self.PANEL_H)
+
+        # ── 위젯 배치 ────────────────────────────────────────────────────
+        top = 40  # 타이틀바 높이
+        gap = 6
+
+        self._tts_toggle = _ToggleSwitch("🔊 TTS", True, self)
+        self._tts_toggle.move(20, top)
+        self._tts_toggle.toggled.connect(self.tts_toggled.emit)
+        top += 32 + gap
+
+        self._volume_slider = _VolumeSlider(0.7, self)
+        self._volume_slider.move(20, top)
+        self._volume_slider.volume_changed.connect(self.volume_changed.emit)
+        top += 36 + gap
+
+        self._yolo_toggle = _ToggleSwitch("👁 AI 피드백", True, self)
+        self._yolo_toggle.move(20, top)
+        self._yolo_toggle.toggled.connect(self.yolo_toggled.emit)
+        top += 32 + gap
+
+        self._live_toggle = _ToggleSwitch("📡 Live 코칭", True, self)
+        self._live_toggle.move(20, top)
+        self._live_toggle.toggled.connect(self.live_toggled.emit)
+        top += 32 + gap + 8
+
+        self._feedback_btn = _ActionButton("🔍 피드백 (F9)", QColor(60, 120, 200), self)
+        self._feedback_btn.move(20, top)
+        self._feedback_btn.clicked.connect(self.manual_feedback_requested.emit)
+        top += 30 + gap
+
+        self._quit_btn = _ActionButton("✖ 종료", QColor(180, 50, 50), self)
+        self._quit_btn.move(20, top)
+        self._quit_btn.clicked.connect(self.quit_requested.emit)
+
+        # 화면 우측 하단에 배치
+        self._place_bottom_right()
+
+    def _place_bottom_right(self):
+        """현재 스크린의 우측 하단에 배치."""
+        app = QApplication.instance()
+        if app is None:
+            return
+        screen = app.primaryScreen()
+        if screen is None:
+            return
+        geo = screen.availableGeometry()
+        x = geo.x() + geo.width() - self.PANEL_W - 30
+        y = geo.y() + geo.height() - self.PANEL_H - 60
+        self.move(x, y)
+
+    # ── 드래그 ────────────────────────────────────────────────────────────
+    def mousePressEvent(self, ev: QMouseEvent):
+        if ev.button() == Qt.MouseButton.LeftButton and ev.position().y() < 36:
+            self._drag_pos = ev.globalPosition().toPoint() - self.frameGeometry().topLeft()
+            ev.accept()
+        else:
+            super().mousePressEvent(ev)
+
+    def mouseMoveEvent(self, ev: QMouseEvent):
+        if self._drag_pos is not None and ev.buttons() & Qt.MouseButton.LeftButton:
+            self.move(ev.globalPosition().toPoint() - self._drag_pos)
+            ev.accept()
+        else:
+            super().mouseMoveEvent(ev)
+
+    def mouseReleaseEvent(self, ev: QMouseEvent):
+        self._drag_pos = None
+        super().mouseReleaseEvent(ev)
+
+    def mouseDoubleClickEvent(self, ev: QMouseEvent):
+        """타이틀바 더블클릭 → 접기/펼치기."""
+        if ev.position().y() < 36:
+            self._collapsed = not self._collapsed
+            if self._collapsed:
+                self.setFixedSize(self.PANEL_W, 36)
+            else:
+                self.setFixedSize(self.PANEL_W, self.PANEL_H)
+            # 자식 위젯 보이기/숨기기
+            for child in (self._tts_toggle, self._volume_slider, self._yolo_toggle,
+                          self._live_toggle, self._feedback_btn, self._quit_btn):
+                child.setVisible(not self._collapsed)
+            self.update()
+
+    # ── 그리기 ────────────────────────────────────────────────────────────
+    def paintEvent(self, ev: QPaintEvent):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        w, h = self.width(), self.height()
+
+        # 배경 — 반투명 다크 글래스
+        path = QPainterPath()
+        path.addRoundedRect(0, 0, w, h, 14, 14)
+        p.setClipPath(path)
+
+        grad = QLinearGradient(0, 0, 0, h)
+        grad.setColorAt(0.0, QColor(30, 30, 45, 230))
+        grad.setColorAt(1.0, QColor(20, 20, 30, 240))
+        p.fillPath(path, QBrush(grad))
+
+        # 테두리
+        p.setClipping(False)
+        border_pen = QPen(QColor(80, 80, 120, 150))
+        border_pen.setWidth(1)
+        p.setPen(border_pen)
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        p.drawRoundedRect(0, 0, w, h, 14, 14)
+
+        # 타이틀바
+        title_path = QPainterPath()
+        title_path.addRoundedRect(0, 0, w, 36, 14, 14)
+        # 아래쪽 모서리는 직각으로
+        title_path.addRect(0, 20, w, 16)
+        title_grad = QLinearGradient(0, 0, w, 0)
+        title_grad.setColorAt(0.0, QColor(50, 50, 80, 200))
+        title_grad.setColorAt(1.0, QColor(40, 40, 65, 200))
+        p.fillPath(title_path, QBrush(title_grad))
+
+        # 타이틀 텍스트
+        p.setPen(QPen(QColor(200, 210, 255)))
+        p.setFont(QFont("Malgun Gothic", 10, QFont.Weight.Bold))
+        collapse_icon = "▲" if not self._collapsed else "▼"
+        p.drawText(10, 0, w - 20, 36, Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
+                   f"⚙ Coach  {collapse_icon}")
+
+        # 구분선
+        if not self._collapsed:
+            p.setPen(QPen(QColor(80, 80, 120, 100)))
+            p.drawLine(10, 36, w - 10, 36)
+
+        p.end()
+
+    # ── 외부 제어 API ─────────────────────────────────────────────────────
+    def set_tts_state(self, on: bool):
+        self._tts_toggle.checked = on
+
+    def set_yolo_state(self, on: bool):
+        self._yolo_toggle.checked = on
+
+    def set_live_state(self, on: bool):
+        self._live_toggle.checked = on
+
+    def toggle_visibility(self):
+        """Ctrl+Shift+C 핫키로 호출 — 보이기/숨기기 전환."""
+        if self.isVisible():
+            self.hide()
+        else:
+            self.show()
+            self.raise_()
