@@ -18,17 +18,18 @@ LoL Realtime Coach — 최종 PoC 통합본 (entry point)
 
 종료:
   Ctrl+C  또는  Ctrl+Shift+Q (글로벌 핫키)
-수동 피드백:
-  F9 (글로벌 핫키) → Gemini에 즉시 요청
+컨트롤러 토글:
+  Ctrl+Shift+C (글로벌 핫키) → 인게임 컨트롤러 패널 보이기/숨기기
 """
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 
-# 프로젝트 루트를 sys.path에 추가 — poc/ 안에서 직접 실행해도 src/* 임포트 가능
-_REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(_REPO_ROOT))
+# 개발 모드에서만 sys.path 보강 (PyInstaller 번들은 자체 import 트리 사용)
+if not getattr(sys, "frozen", False):
+    _DEV_REPO_ROOT = Path(__file__).resolve().parent.parent
+    sys.path.insert(0, str(_DEV_REPO_ROOT))
 
 from PyQt6.QtWidgets import QApplication  # noqa: E402
 from loguru import logger  # noqa: E402
@@ -37,13 +38,17 @@ from poc.integrated_live import LIVE_API_AVAILABLE  # noqa: E402
 from poc.integrated_overlay import IntegratedOverlay  # noqa: E402
 from poc.integrated_voice import TTS_AVAILABLE  # noqa: E402
 from poc.integrated_yolo import CORE_AVAILABLE  # noqa: E402
+from poc.paths import APP_ROOT  # noqa: E402
 
 
 def _setup_logger() -> None:
-    log_dir = _REPO_ROOT / "logs"
+    log_dir = APP_ROOT / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     logger.remove()
-    logger.add(sys.stderr, level="INFO")
+    # PyInstaller windowed 모드(console=False)에서는 sys.stderr 가 None.
+    # 콘솔이 살아 있을 때만 stderr sink 등록 — 그 외에는 파일 로그만.
+    if sys.stderr is not None:
+        logger.add(sys.stderr, level="INFO")
     logger.add(
         str(log_dir / "integrated_poc.log"),
         level="DEBUG", rotation="10 MB", retention=3,
@@ -58,7 +63,7 @@ def main() -> None:
     logger.info("  YOLO beta : %s", "OK" if CORE_AVAILABLE else "DISABLED")
     logger.info("  Live API  : %s", "OK" if LIVE_API_AVAILABLE else "DISABLED")
     logger.info("  TTS       : %s", "OK" if TTS_AVAILABLE else "DISABLED")
-    logger.info("  F9: manual feedback  |  Ctrl+Shift+Q: quit")
+    logger.info("  Ctrl+Shift+Q: quit  |  Ctrl+Shift+C: toggle controller")
     logger.info("=" * 60)
 
     app = QApplication(sys.argv)

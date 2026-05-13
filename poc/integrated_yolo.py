@@ -21,9 +21,10 @@ from poc.integrated_constants import (
     RISK_AUTO_ALERT,
 )
 from poc.integrated_helpers import bbox_center
+from poc.paths import APP_ROOT
 
-# 프로젝트 루트 — config / 모델 파일 경로 기준점
-_REPO_ROOT = Path(__file__).resolve().parent.parent
+# 사이드카 리소스 루트 — config / 모델 / .env 의 기준점 (exe 옆 폴더 또는 repo 루트)
+_REPO_ROOT = APP_ROOT
 
 # ── 핵심 의존성 (src 모듈) ───────────────────────────────────────────────────
 try:

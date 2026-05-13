@@ -19,19 +19,15 @@ def strip_emoji(text: str) -> str:
 
 
 def make_coaching_tip(hp_pct: float, gold: float, game_time: float) -> str:
-    """체력/골드/게임시간 기반 규칙 팁.
+    """체력/게임시간 기반 규칙 팁.
 
-    골드 팁은 500골드 단위로 스냅해 매 초마다 새 팁으로 인식되는 것을 방지.
+    [정책] 골드 보유량 기반 팁은 화면/TTS 모두 출력하지 않는다 — 사용자가
+    이미 인게임 HUD로 확인 가능한 정보이므로 알림 가치가 낮음.
     조건에 해당 없으면 빈 문자열 반환 (TTS 잡음 방지).
     """
     if hp_pct <= 20:
         return "🛑 체력 20% 이하! 귀환을 고려하세요."
-    if gold >= 1500:
-        snapped = (int(gold) // 500) * 500  # 1500 / 2000 / 2500 … 단위로만 갱신
-        return f"💰 {snapped}+ 골드 — 코어 아이템 구매 타이밍!"
-    if gold >= 1100 and game_time < 600:
-        snapped = (int(gold) // 100) * 100  # 100골드 단위로 스냅
-        return f"💡 {snapped}+ 골드 — 하위템 구매 후 압박하세요."
+    # 골드 팁(💰/💡)은 의도적으로 제외 — 사용자 요구사항.
     if game_time < 100:
         return "🔍 초반 시야를 확보하세요."
     if 810 < game_time < 870:
@@ -42,22 +38,18 @@ def make_coaching_tip(hp_pct: float, gold: float, game_time: float) -> str:
 
 
 def make_event_tip(ev: dict, my_name: str) -> str:
-    """Live Client API 이벤트 객체 → 짧은 알림 문구. 매칭 안 되면 빈 문자열."""
-    et     = ev.get("EventName", "")
-    killer = ev.get("KillerName", "")
-    victim = ev.get("VictimName", "")
-    if et == "ChampionKill":
-        if killer == my_name:
-            return "🔥 킬! 라인 밀고 귀환 타이밍 잡으세요."
-        if victim == my_name:
-            return "💀 데스. 상대 스펠 브리핑하세요."
-        return f"⚔️ {killer} → {victim} 처치"
+    """Live Client API 이벤트 객체 → 짧은 알림 문구. 매칭 안 되면 빈 문자열.
+
+    [정책] 챔피언 킬/데스/퍼스트블러드는 화면/TTS 모두 출력하지 않는다.
+    이는 사용자가 인게임 알림으로 이미 확인 가능한 정보이므로 알림 가치가 낮음.
+    오브젝트(용/포탑/바론) 처치는 전략 판단에 유용해 유지.
+    """
+    et = ev.get("EventName", "")
+    # 챔피언 킬/데스/퍼스트블러드는 의도적으로 제외 — 사용자 요구사항.
     if et == "DragonKill":
         return "🐉 용 처치 — 다음 용 타이머 체크."
     if et == "TurretKilled":
         return "🏰 포탑 파괴 — 로밍 기회!"
     if et == "BaronKill":
         return "🟣 바론 처치! 라인 밀기 집중."
-    if et == "FirstBlood":
-        return "🩸 퍼스트 블러드 발생!"
     return ""

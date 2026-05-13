@@ -3,12 +3,16 @@
 
 3개 워커 스레드(Voice / Yolo / Live)를 소유하고,
 시그널을 받아 화면에 배너로 표시한다. 글로벌 핫키:
-  F9            : 수동 Gemini 피드백
   Ctrl+Shift+Q  : 종료
   Ctrl+Shift+C  : 인게임 컨트롤러 패널 토글
+
+TTS 정책:
+  - LLM 응답의 [위험도] 레벨이 "높음" 또는 "매우높음"일 때만 발화
+  - 발화 텍스트에서 [xxx] 형식의 모든 메타 태그를 제거
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import keyboard
@@ -27,8 +31,7 @@ from poc.integrated_controller import ControllerPanel
 from poc.integrated_live import LiveClientThread
 from poc.integrated_voice import VoiceThread
 from poc.integrated_yolo import YoloCoachThread
-
-_REPO_ROOT = Path(__file__).resolve().parent.parent
+from poc.paths import APP_ROOT
 
 
 class IntegratedOverlay(QWidget):
@@ -47,7 +50,7 @@ class IntegratedOverlay(QWidget):
 
     def __init__(self):
         super().__init__()
-        Path(_REPO_ROOT / "logs").mkdir(parents=True, exist_ok=True)
+        Path(APP_ROOT / "logs").mkdir(parents=True, exist_ok=True)
         # 컨트롤러 토글 상태 (TTS / YOLO / Live)
         self._tts_enabled  = True
         self._yolo_enabled = True
@@ -128,7 +131,6 @@ class IntegratedOverlay(QWidget):
         self._controller.yolo_toggled.connect(self._on_toggle_yolo)
         self._controller.live_toggled.connect(self._on_toggle_live)
         self._controller.volume_changed.connect(self._voice.set_volume)
-        self._controller.manual_feedback_requested.connect(self._yolo.request_manual)
         self._controller.quit_requested.connect(self._on_quit)
         self._controller.show()
         # 초기 슬라이더 표시값(70%)을 실제 TTS 음량과 동기화
@@ -137,10 +139,9 @@ class IntegratedOverlay(QWidget):
     def _init_hotkeys(self) -> None:
         try:
             # 🔥 suppress=False: 키 이벤트가 계속 전파되도록 (마우스 간섭 방지)
-            keyboard.add_hotkey("f9",           self._yolo.request_manual, suppress=False)
             keyboard.add_hotkey("ctrl+shift+q", self._on_quit, suppress=False)
             keyboard.add_hotkey("ctrl+shift+c", self._controller.toggle_visibility, suppress=False)
-            logger.info("핫키 등록: F9(수동피드백), Ctrl+Shift+Q(종료), Ctrl+Shift+C(컨트롤러)")
+            logger.info("핫키 등록: Ctrl+Shift+Q(종료), Ctrl+Shift+C(컨트롤러)")
         except (ImportError, Exception) as e:
             logger.warning(f"⚠️ 핫키 등록 실패 (WSL/Linux 권한 부족): {e}")
             logger.info("단축키 대신 GUI 버튼이나 다른 방식을 사용하세요.")
@@ -151,11 +152,35 @@ class IntegratedOverlay(QWidget):
         self._qtimer.start(1000)
 
     # ── 슬롯 ─────────────────────────────────────────────────────────────────
+    # LLM 응답 파싱용 정규식
+    _RE_RISK_LEVEL = re.compile(r"\[\s*위험도\s*\]\s*(매우높음|높음|보통|낮음)")
+    _RE_TAG        = re.compile(r"\[[^\]]+\]")
+    _RE_WS         = re.compile(r"\s+")
+    _TTS_LEVELS    = {"높음", "매우높음"}
+
+    @classmethod
+    def _parse_risk_level(cls, text: str) -> str:
+        """LLM 응답의 [위험도] 라인에서 레벨 텍스트를 추출. 없으면 빈 문자열."""
+        m = cls._RE_RISK_LEVEL.search(text)
+        return m.group(1) if m else ""
+
+    @classmethod
+    def _strip_tags(cls, text: str) -> str:
+        """[xxx] 형식의 모든 메타 태그를 제거하고 공백을 한 칸으로 정리."""
+        return cls._RE_WS.sub(" ", cls._RE_TAG.sub("", text)).strip()
+
     def _on_llm_feedback(self, text: str) -> None:
         self._llm_text  = text
         self._llm_timer = LLM_DISPLAY_SEC
         if self._tts_enabled:
-            self._voice.speak(text[:100])
+            # LLM이 보고한 위험도 레벨이 "높음"/"매우높음"일 때만 TTS 발화
+            level = self._parse_risk_level(text)
+            if level in self._TTS_LEVELS:
+                spoken = self._strip_tags(text)
+                if spoken:
+                    self._voice.speak(spoken[:100])
+            else:
+                logger.debug(f"TTS 차단 — 위험도 레벨='{level or '없음'}'")
         self.repaint()
 
     def _on_risk_update(self, risk: float) -> None:
@@ -240,6 +265,10 @@ class IntegratedOverlay(QWidget):
         # 먼저 창을 즉시 숨겨 스레드 종료 대기 중 잔상이 남지 않도록 한다
         self.hide()
         if hasattr(self, "_controller"):
+            # 트레이로 최소화된 상태에서 종료하면 잔여 아이콘이 남을 수 있어 같이 정리
+            tray = getattr(self._controller, "_tray", None)
+            if tray is not None and tray.isVisible():
+                tray.hide()
             self._controller.hide()
         self._yolo.stop()
         self._live.stop()

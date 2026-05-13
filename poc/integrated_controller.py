@@ -12,7 +12,7 @@ from PyQt6.QtGui import (
     QColor, QFont, QLinearGradient, QPainter, QPainterPath,
     QPen, QBrush, QMouseEvent, QPaintEvent,
 )
-from PyQt6.QtWidgets import QWidget, QApplication
+from PyQt6.QtWidgets import QWidget, QApplication, QSystemTrayIcon, QStyle
 from loguru import logger
 
 
@@ -204,16 +204,22 @@ class ControllerPanel(QWidget):
     yolo_toggled = pyqtSignal(bool)
     live_toggled = pyqtSignal(bool)
     volume_changed = pyqtSignal(float)
-    manual_feedback_requested = pyqtSignal()
     quit_requested = pyqtSignal()
 
     PANEL_W = 170
-    PANEL_H = 320  # 타이틀바 + 토글 3개 + 슬라이더 + 버튼 2개 + 여백
+    PANEL_H = 320  # 타이틀바 + 토글 3개 + 슬라이더 + 최소화 + 종료 + 여백
+
+    # 타이틀바 우측 끝의 접기 버튼 히트 영역 (마우스 트래킹 / 페인트 공통)
+    TITLE_H = 36
+    COLLAPSE_BTN_W = 30
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self._drag_pos: QPoint | None = None
         self._collapsed = False
+        self._collapse_hover = False
+        # mouseMoveEvent를 누르지 않은 상태에서도 받기 위해 트래킹 ON
+        self.setMouseTracking(True)
 
         self.setWindowTitle("Coach Controller")
         self.setWindowFlags(
@@ -248,14 +254,17 @@ class ControllerPanel(QWidget):
         self._live_toggle.toggled.connect(self.live_toggled.emit)
         top += 32 + gap + 8
 
-        self._feedback_btn = _ActionButton("🔍 피드백 (F9)", QColor(60, 120, 200), self)
-        self._feedback_btn.move(20, top)
-        self._feedback_btn.clicked.connect(self.manual_feedback_requested.emit)
+        self._min_btn = _ActionButton("➖ 최소화", QColor(80, 90, 120), self)
+        self._min_btn.move(20, top)
+        self._min_btn.clicked.connect(self._minimize_to_tray)
         top += 30 + gap
 
         self._quit_btn = _ActionButton("✖ 종료", QColor(180, 50, 50), self)
         self._quit_btn.move(20, top)
         self._quit_btn.clicked.connect(self.quit_requested.emit)
+
+        # 시스템 트레이 아이콘 — 최소화 시 표시, 더블클릭으로 복원
+        self._setup_tray()
 
         # 화면 우측 하단에 배치
         self._place_bottom_right()
@@ -273,38 +282,107 @@ class ControllerPanel(QWidget):
         y = geo.y() + geo.height() - self.PANEL_H - 60
         self.move(x, y)
 
+    # ── 트레이 (완전 최소화) ──────────────────────────────────────────────
+    def _setup_tray(self) -> None:
+        """시스템 트레이 아이콘 준비. 시스템에서 트레이를 지원하지 않으면 비활성."""
+        if not QSystemTrayIcon.isSystemTrayAvailable():
+            self._tray = None
+            logger.warning("시스템 트레이 사용 불가 — 최소화 버튼이 showMinimized()로 대체됨")
+            return
+        self._tray = QSystemTrayIcon(self)
+        # 앱 아이콘이 없으면 표준 아이콘으로 폴백
+        icon = QApplication.instance().windowIcon()
+        if icon.isNull():
+            icon = self.style().standardIcon(QStyle.StandardPixmap.SP_ComputerIcon)
+        self._tray.setIcon(icon)
+        self._tray.setToolTip("LoL Coach — 더블클릭으로 복원")
+        self._tray.activated.connect(self._on_tray_activated)
+
+    def _minimize_to_tray(self) -> None:
+        """패널을 화면에서 완전히 숨기고 트레이 아이콘 표시."""
+        if self._tray is not None:
+            self.hide()
+            self._tray.show()
+            logger.info("컨트롤러 → 트레이 최소화 (더블클릭으로 복원)")
+        else:
+            # 트레이 미지원 환경 폴백 — 작업표시줄 최소화
+            self.showMinimized()
+
+    def _restore_from_tray(self) -> None:
+        """트레이에서 패널을 다시 화면으로 복원."""
+        if self._tray is not None:
+            self._tray.hide()
+        self.show()
+        self.raise_()
+        self.activateWindow()
+        logger.info("컨트롤러 ← 트레이 복원")
+
+    def _on_tray_activated(self, reason: QSystemTrayIcon.ActivationReason) -> None:
+        # 더블클릭(요구사항) + 단일 트리거(접근성)도 복원으로 처리
+        if reason in (QSystemTrayIcon.ActivationReason.DoubleClick,
+                      QSystemTrayIcon.ActivationReason.Trigger):
+            self._restore_from_tray()
+
+    # ── 접기 버튼 ─────────────────────────────────────────────────────────
+    def _is_in_collapse_button(self, x: float, y: float) -> bool:
+        """타이틀바 우측 끝 영역(▲/▼ 버튼) 안에 좌표가 있는지."""
+        return (x >= self.PANEL_W - self.COLLAPSE_BTN_W
+                and 0 <= y < self.TITLE_H)
+
+    def _toggle_collapse(self) -> None:
+        """접기/펼치기 상태 토글 + 자식 위젯 가시성 + 패널 높이 조정."""
+        self._collapsed = not self._collapsed
+        if self._collapsed:
+            self.setFixedSize(self.PANEL_W, self.TITLE_H)
+        else:
+            self.setFixedSize(self.PANEL_W, self.PANEL_H)
+        for child in (self._tts_toggle, self._volume_slider, self._yolo_toggle,
+                      self._live_toggle, self._min_btn, self._quit_btn):
+            child.setVisible(not self._collapsed)
+        self.update()
+
     # ── 드래그 ────────────────────────────────────────────────────────────
     def mousePressEvent(self, ev: QMouseEvent):
-        if ev.button() == Qt.MouseButton.LeftButton and ev.position().y() < 36:
-            self._drag_pos = ev.globalPosition().toPoint() - self.frameGeometry().topLeft()
-            ev.accept()
-        else:
-            super().mousePressEvent(ev)
+        if ev.button() == Qt.MouseButton.LeftButton:
+            x = ev.position().x()
+            y = ev.position().y()
+            # 우측 ▲/▼ 영역 → 토글 (드래그하지 않음)
+            if self._is_in_collapse_button(x, y):
+                self._toggle_collapse()
+                ev.accept()
+                return
+            # 타이틀바 나머지 영역 → 드래그 시작
+            if y < self.TITLE_H:
+                self._drag_pos = ev.globalPosition().toPoint() - self.frameGeometry().topLeft()
+                ev.accept()
+                return
+        super().mousePressEvent(ev)
 
     def mouseMoveEvent(self, ev: QMouseEvent):
+        # 호버 상태 갱신 (▲/▼ 영역 위에 있으면 강조)
+        hover = self._is_in_collapse_button(ev.position().x(), ev.position().y())
+        if hover != self._collapse_hover:
+            self._collapse_hover = hover
+            self.update()
+
         if self._drag_pos is not None and ev.buttons() & Qt.MouseButton.LeftButton:
             self.move(ev.globalPosition().toPoint() - self._drag_pos)
             ev.accept()
         else:
             super().mouseMoveEvent(ev)
 
+    def leaveEvent(self, ev) -> None:
+        if self._collapse_hover:
+            self._collapse_hover = False
+            self.update()
+        super().leaveEvent(ev)
+
     def mouseReleaseEvent(self, ev: QMouseEvent):
         self._drag_pos = None
         super().mouseReleaseEvent(ev)
 
-    def mouseDoubleClickEvent(self, ev: QMouseEvent):
-        """타이틀바 더블클릭 → 접기/펼치기."""
-        if ev.position().y() < 36:
-            self._collapsed = not self._collapsed
-            if self._collapsed:
-                self.setFixedSize(self.PANEL_W, 36)
-            else:
-                self.setFixedSize(self.PANEL_W, self.PANEL_H)
-            # 자식 위젯 보이기/숨기기
-            for child in (self._tts_toggle, self._volume_slider, self._yolo_toggle,
-                          self._live_toggle, self._feedback_btn, self._quit_btn):
-                child.setVisible(not self._collapsed)
-            self.update()
+    # mouseDoubleClickEvent 제거 — 더블클릭 토글 비활성화 (요구사항).
+    # 접기/펼치기는 타이틀바 우측의 ▲/▼ 버튼 단일 클릭으로만 작동.
 
     # ── 그리기 ────────────────────────────────────────────────────────────
     def paintEvent(self, ev: QPaintEvent):
@@ -341,17 +419,33 @@ class ControllerPanel(QWidget):
         title_grad.setColorAt(1.0, QColor(40, 40, 65, 200))
         p.fillPath(title_path, QBrush(title_grad))
 
-        # 타이틀 텍스트
+        # 타이틀 텍스트 (왼쪽)
         p.setPen(QPen(QColor(200, 210, 255)))
         p.setFont(QFont("Malgun Gothic", 10, QFont.Weight.Bold))
+        btn_w = self.COLLAPSE_BTN_W
+        title_h = self.TITLE_H
+        p.drawText(10, 0, w - btn_w - 10, title_h,
+                   Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
+                   "⚙ Coach")
+
+        # 접기 버튼 영역 (오른쪽 끝) — 호버 시 배경 강조
+        btn_x = w - btn_w
+        if self._collapse_hover:
+            p.setBrush(QBrush(QColor(255, 255, 255, 40)))
+            p.setPen(Qt.PenStyle.NoPen)
+            p.drawRoundedRect(btn_x + 2, 4, btn_w - 6, title_h - 8, 6, 6)
+
+        # 접기 아이콘 (▲ 펼침 / ▼ 접힘)
+        p.setPen(QPen(QColor(220, 230, 255)))
+        p.setFont(QFont("Malgun Gothic", 11, QFont.Weight.Bold))
         collapse_icon = "▲" if not self._collapsed else "▼"
-        p.drawText(10, 0, w - 20, 36, Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
-                   f"⚙ Coach  {collapse_icon}")
+        p.drawText(btn_x, 0, btn_w, title_h,
+                   Qt.AlignmentFlag.AlignCenter, collapse_icon)
 
         # 구분선
         if not self._collapsed:
             p.setPen(QPen(QColor(80, 80, 120, 100)))
-            p.drawLine(10, 36, w - 10, 36)
+            p.drawLine(10, title_h, w - 10, title_h)
 
         p.end()
 
@@ -366,9 +460,12 @@ class ControllerPanel(QWidget):
         self._live_toggle.checked = on
 
     def toggle_visibility(self):
-        """Ctrl+Shift+C 핫키로 호출 — 보이기/숨기기 전환."""
+        """Ctrl+Shift+C 핫키 — 보이기/숨기기 전환. 트레이 최소화 상태면 복원."""
         if self.isVisible():
             self.hide()
         else:
+            # 트레이에 떠 있는 상태(최소화)에서 핫키를 누른 경우 — 트레이도 같이 정리
+            if getattr(self, "_tray", None) is not None and self._tray.isVisible():
+                self._tray.hide()
             self.show()
             self.raise_()
