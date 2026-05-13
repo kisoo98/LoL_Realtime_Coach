@@ -5,6 +5,7 @@
 시그널을 받아 화면에 배너로 표시한다. 글로벌 핫키:
   F9            : 수동 Gemini 피드백
   Ctrl+Shift+Q  : 종료
+  Ctrl+Shift+C  : 인게임 컨트롤러 패널 토글
 """
 from __future__ import annotations
 
@@ -22,6 +23,7 @@ from poc.integrated_constants import (
     LLM_DISPLAY_SEC,
     RISK_AUTO_ALERT,
 )
+from poc.integrated_controller import ControllerPanel
 from poc.integrated_live import LiveClientThread
 from poc.integrated_voice import VoiceThread
 from poc.integrated_yolo import YoloCoachThread
@@ -46,8 +48,13 @@ class IntegratedOverlay(QWidget):
     def __init__(self):
         super().__init__()
         Path(_REPO_ROOT / "logs").mkdir(parents=True, exist_ok=True)
+        # 컨트롤러 토글 상태 (TTS / YOLO / Live)
+        self._tts_enabled  = True
+        self._yolo_enabled = True
+        self._live_enabled = True
         self._init_ui()
         self._init_threads()
+        self._init_controller()
         self._init_hotkeys()
         self._init_repaint_timer()
 
@@ -114,12 +121,26 @@ class IntegratedOverlay(QWidget):
             logger.warning(f"스크린 감지 오류: {e}")
             return None
 
+    def _init_controller(self) -> None:
+        """인게임 컨트롤러 패널 생성 + 시그널 연결."""
+        self._controller = ControllerPanel()
+        self._controller.tts_toggled.connect(self._on_toggle_tts)
+        self._controller.yolo_toggled.connect(self._on_toggle_yolo)
+        self._controller.live_toggled.connect(self._on_toggle_live)
+        self._controller.volume_changed.connect(self._voice.set_volume)
+        self._controller.manual_feedback_requested.connect(self._yolo.request_manual)
+        self._controller.quit_requested.connect(self._on_quit)
+        self._controller.show()
+        # 초기 슬라이더 표시값(70%)을 실제 TTS 음량과 동기화
+        self._voice.set_volume(0.7)
+
     def _init_hotkeys(self) -> None:
         try:
             # 🔥 suppress=False: 키 이벤트가 계속 전파되도록 (마우스 간섭 방지)
             keyboard.add_hotkey("f9",           self._yolo.request_manual, suppress=False)
             keyboard.add_hotkey("ctrl+shift+q", self._on_quit, suppress=False)
-            logger.info("핫키 등록: F9(수동피드백), Ctrl+Shift+Q(종료)")
+            keyboard.add_hotkey("ctrl+shift+c", self._controller.toggle_visibility, suppress=False)
+            logger.info("핫키 등록: F9(수동피드백), Ctrl+Shift+Q(종료), Ctrl+Shift+C(컨트롤러)")
         except (ImportError, Exception) as e:
             logger.warning(f"⚠️ 핫키 등록 실패 (WSL/Linux 권한 부족): {e}")
             logger.info("단축키 대신 GUI 버튼이나 다른 방식을 사용하세요.")
@@ -133,7 +154,8 @@ class IntegratedOverlay(QWidget):
     def _on_llm_feedback(self, text: str) -> None:
         self._llm_text  = text
         self._llm_timer = LLM_DISPLAY_SEC
-        self._voice.speak(text[:100])
+        if self._tts_enabled:
+            self._voice.speak(text[:100])
         self.repaint()
 
     def _on_risk_update(self, risk: float) -> None:
@@ -161,22 +183,44 @@ class IntegratedOverlay(QWidget):
         if self._game_status == "waiting":
             self._status_msg = data.get("msg", "대기 중...")
         else:
-            for s in data.get("speeches", []):
-                self._voice.speak(s)
-            new_tip = data.get("new_coaching_tip")
-            if new_tip:
-                self._live_tip   = new_tip
-                self._live_timer = LIVE_DISPLAY_SEC
-            new_ev = data.get("event_tip")
-            if new_ev:
-                self._event_tip   = new_ev
-                self._event_timer = EVENT_DISPLAY_SEC
+            if self._tts_enabled:
+                for s in data.get("speeches", []):
+                    self._voice.speak(s)
+            if self._live_enabled:
+                new_tip = data.get("new_coaching_tip")
+                if new_tip:
+                    self._live_tip   = new_tip
+                    self._live_timer = LIVE_DISPLAY_SEC
+                new_ev = data.get("event_tip")
+                if new_ev:
+                    self._event_tip   = new_ev
+                    self._event_timer = EVENT_DISPLAY_SEC
         self.repaint()
 
     def _on_quit(self) -> None:
         logger.info("Ctrl+Shift+Q - quit")
         self._shutdown()
         QApplication.quit()
+
+    # ── 컨트롤러 토글 슬롯 ──────────────────────────────────────────────────
+    def _on_toggle_tts(self, on: bool) -> None:
+        self._tts_enabled = on
+        logger.info(f"TTS {'ON' if on else 'OFF'}")
+
+    def _on_toggle_yolo(self, on: bool) -> None:
+        self._yolo_enabled = on
+        if on:
+            if not self._yolo.isRunning():
+                self._yolo.start()
+            self._yolo.resume()
+            logger.info("YOLO ON")
+        else:
+            self._yolo.pause()
+            logger.info("YOLO OFF (일시정지)")
+
+    def _on_toggle_live(self, on: bool) -> None:
+        self._live_enabled = on
+        logger.info(f"Live API 표시 {'ON' if on else 'OFF'}")
 
     # ── tick / shutdown ──────────────────────────────────────────────────────
     def _tick(self) -> None:
@@ -195,6 +239,8 @@ class IntegratedOverlay(QWidget):
     def _shutdown(self) -> None:
         # 먼저 창을 즉시 숨겨 스레드 종료 대기 중 잔상이 남지 않도록 한다
         self.hide()
+        if hasattr(self, "_controller"):
+            self._controller.hide()
         self._yolo.stop()
         self._live.stop()
         self._voice.stop()

@@ -59,8 +59,18 @@ class YoloCoachThread(QThread):
         self._champ_list_lock = threading.Lock()
         # 위험도 산정 (v2.1 멀티팩터, 쿨타임 관리 포함)
         self._risk_analyzer  = RiskAnalyzer() if CORE_AVAILABLE else None
+        # 일시정지 플래그 (컨트롤러 YOLO 토글에서 set)
+        self._paused = False
 
     # ── 외부 API ─────────────────────────────────────────────────────────────
+    def pause(self) -> None:
+        """YOLO 파이프라인 일시정지 (스레드는 살아있되 캡처·감지를 건너뜀)."""
+        self._paused = True
+
+    def resume(self) -> None:
+        """YOLO 파이프라인 재개."""
+        self._paused = False
+
     def set_my_champion(self, champ_name: str) -> None:
         """LiveClientThread → 내 챔피언명 갱신 (스레드 안전)."""
         with self._champ_lock:
@@ -113,6 +123,11 @@ class YoloCoachThread(QThread):
 
         while self.running:
             t0 = time.perf_counter()
+
+            # 일시정지 상태면 캡처·감지를 건너뜀
+            if self._paused:
+                time.sleep(target_dt)
+                continue
 
             # 캡처 ────────────────────────────────────────────────────────
             frame = None
@@ -176,7 +191,22 @@ class YoloCoachThread(QThread):
     # ── 헬퍼 ─────────────────────────────────────────────────────────────────
     def _send_llm_feedback(self, coach, result: dict) -> None:
         """Gemini에 현재 상황을 보내고 피드백을 시그널로 전달."""
+        # 위험도 점수/레벨을 LLM에 명시적으로 전달 → 톤 차별화 가능 (v2.1)
+        # 자동 호출은 risk≥RISK_AUTO_ALERT(65)에서만 트리거되지만, 수동(F9)도
+        # 같은 경로를 쓰므로 0~100 전 구간 매핑.
+        risk = float(getattr(self._risk_analyzer, "last_risk", 0.0))
+        if risk < 31:
+            risk_level = "낮음"
+        elif risk < 65:
+            risk_level = "보통"
+        elif risk < 85:
+            risk_level = "높음"
+        else:
+            risk_level = "매우높음"
+
         summary = {
+            "risk_score":  round(risk, 1),
+            "risk_level":  risk_level,
             "ally_count":  len(result.get("ally", [])),
             "enemy_count": len(result.get("enemy", [])),
             "my_position": bbox_center(result.get("my_position")),
@@ -195,7 +225,11 @@ class YoloCoachThread(QThread):
             text = coach.get_feedback(summary, frame_snap)
             self.feedback_signal.emit(text or "[응답 없음]")
         except Exception as e:
-            self.feedback_signal.emit(f"[오류] Gemini 요청 실패: {e}")
+            msg = str(e).lower()
+            if "timeout" in msg or "deadline" in msg or "504" in msg:
+                self.feedback_signal.emit("[지연] LLM 응답 지연 — 곧 재시도합니다")
+            else:
+                self.feedback_signal.emit(f"[오류] Gemini 요청 실패: {e}")
 
     def stop(self) -> None:
         self.running = False

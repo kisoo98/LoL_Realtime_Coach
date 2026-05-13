@@ -88,6 +88,16 @@ class VoiceThread(QThread):
             except Exception as e:
                 logger.warning(f"TTS 오류: {e}")
 
+    def set_volume(self, vol: float) -> None:
+        """TTS 재생 음량을 설정한다 (0.0 ~ 1.0). 컨트롤러 슬라이더에서 호출."""
+        vol = max(0.0, min(1.0, vol))
+        if TTS_AVAILABLE:
+            try:
+                pygame.mixer.music.set_volume(vol)
+            except Exception:
+                pass
+        logger.debug(f"TTS 음량: {int(vol * 100)}%")
+
     def stop(self) -> None:
         self.running = False
         self.wait()
