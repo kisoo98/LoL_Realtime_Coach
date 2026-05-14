@@ -58,20 +58,20 @@
 ### 학습 곡선 (Results)
 학습이 진행됨에 따라 Loss는 감소하고 Accuracy가 꾸준히 상승하여 안정적으로 수렴하는 과정을 보여줍니다.
 
-*(학습 곡선 이미지 삽입 위치)*
-<!-- <img width="720" alt="results" src="이미지_URL" /> -->
+<img width="720" height="480" alt="{4BB0D0EA-57A0-4B6A-A8CD-D15E03D7DFD2}" src="https://github.com/user-attachments/assets/7c43fd4d-e930-47b8-baa5-2a241fc18829" />
+
 
 ### 혼동 행렬 (Confusion Matrix)
 172개 챔피언 클래스 전체에 대한 예측 정확도와 헷갈리기 쉬운 챔피언 간의 오분류 경향을 나타냅니다.
 
-*(혼동 행렬 이미지 삽입 위치)*
-<!-- <img width="720" alt="confusion_matrix" src="이미지_URL" /> -->
+<img width="720" height="480" alt="{4EACBCB7-618F-477E-A17C-3138221FD05F}" src="https://github.com/user-attachments/assets/b716ff14-993d-4bb9-b992-aec1a2c826f0" />
+
 
 ### 예측 결과 예시 (Validation Predictions)
 검증 데이터셋의 크롭된 챔피언 아이콘에 대해 모델이 챔피언 이름을 예측한 결과 예시입니다.
 
-*(예측 결과 예시 이미지 삽입 위치)*
-<!-- <img width="720" alt="val_predictions" src="이미지_URL" /> -->
+<img width="720" height="480" alt="{983FA7AF-3252-43AE-A49D-B6E4E1868657}" src="https://github.com/user-attachments/assets/134e681d-da78-4fdd-952f-a271646ed15b" />
+
 
 ---
 
