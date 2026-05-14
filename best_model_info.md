@@ -1,5 +1,3 @@
-<img width="2400" height="1200" alt="results" src="https://github.com/user-attachments/assets/5d807466-6b13-4019-b1d1-de65d29758bf" /># YOLO 모델 정보 (YOLO26l)
-
 ## 📋 개요
 본 문서는 `yolo26l_train.ipynb` 노트북을 통해 학습된 YOLO26l 모델(`best.pt`)의 구성, 학습 과정 및 성능 지표를 설명합니다. 이 모델은 리그 오브 레전드(LoL) 미니맵에서 챔피언 아이콘 및 미니맵 영역을 탐지하기 위해 최적화되었습니다.
 
