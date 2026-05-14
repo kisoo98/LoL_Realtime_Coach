@@ -1,4 +1,4 @@
-# YOLO 모델 정보 (YOLO26l)
+<img width="2400" height="1200" alt="results" src="https://github.com/user-attachments/assets/5d807466-6b13-4019-b1d1-de65d29758bf" /># YOLO 모델 정보 (YOLO26l)
 
 ## 📋 개요
 본 문서는 `yolo26l_train.ipynb` 노트북을 통해 학습된 YOLO26l 모델(`best.pt`)의 구성, 학습 과정 및 성능 지표를 설명합니다. 이 모델은 리그 오브 레전드(LoL) 미니맵에서 챔피언 아이콘 및 미니맵 영역을 탐지하기 위해 최적화되었습니다.
@@ -63,17 +63,20 @@
 ### 학습 곡선 (Results)
 학습이 진행됨에 따라 Loss는 감소하고 mAP는 꾸준히 상승하여 안정적으로 수렴하였습니다.
 
-![results.png](results.png)
+<img width="720" height="480" alt="{1010E424-9CAE-4643-A4A9-F04B79C295B6}" src="https://github.com/user-attachments/assets/67ac3d47-662b-4ea4-a1ba-c40d034346f9" />
+
 
 ### 혼동 행렬 (Confusion Matrix)
 대부분의 객체를 정확하게 분류하고 있으며, 배경(Background)과의 오탐지율이 매우 낮습니다.
 
-![confusion_matrix.png](confusion_matrix.png)
+<img width="720" height="480" alt="{0CC54B83-6169-40B0-8CA8-8AB24296A296}" src="https://github.com/user-attachments/assets/8732bbe3-8886-460b-8561-bf700727c111" />
+
 
 ### 예측 결과 예시 (Validation Predictions)
 검증 데이터셋에 대해 모델이 예측한 결과입니다. 챔피언 아이콘과 미니맵 영역을 정확하게 탐지하고 있습니다.
 
-![val_batch0_pred.jpg](val_batch0_pred.jpg)
+<img width="720" height="480" alt="{CEBA243A-FD0D-41E9-A086-796BC9A556B9}" src="https://github.com/user-attachments/assets/686c18e6-27f8-41f8-be1b-ad6919d5bf17" />
+
 
 ---
 
