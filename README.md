@@ -38,7 +38,7 @@ LoLCoach/
   LoLCoach.exe   ← 실행 파일
   configs/
     config.yaml  ← 설정 파일
-  models/        ← AI 모델 (포함됨)
+  models/        ← AI 모델
 ```
 
 ### 3단계 — API Key 설정
@@ -111,5 +111,5 @@ A. `configs/config.yaml`에 API Key가 올바르게 입력됐는지 확인해 �
 **Q. 어떤 해상도를 지원하나요?**  
 A. 1920x1080 / 2560x1440 / 3840x2160을 지원합니다.
 
-**Q. 롤 가드에 걸리나요?**  
+**Q. 뱅 가드에 걸리나요?**  
 A. 화면 읽기만 수행하며 게임 메모리에 접근하지 않습니다.
