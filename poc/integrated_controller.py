@@ -2,7 +2,7 @@
 인게임 컨트롤러 위젯.
 
 게임 화면 위에 작은 드래그 가능한 패널을 띄워
-TTS / YOLO / Live API 토글, 수동 피드백 요청, 종료 등을 제공한다.
+TTS / YOLO / Live API 토글, 종료 등을 제공한다.
 Ctrl+Shift+C 핫키로 보이기/숨기기 전환 가능.
 """
 from __future__ import annotations

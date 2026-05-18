@@ -30,8 +30,8 @@ def make_coaching_tip(hp_pct: float, gold: float, game_time: float) -> str:
     # 골드 팁(💰/💡)은 의도적으로 제외 — 사용자 요구사항.
     if game_time < 100:
         return "🔍 초반 시야를 확보하세요."
-    if 810 < game_time < 870:
-        return "⏰ 14분 — 타워 방패 소멸 타이밍!"
+    # NOTE: "14분 포탑방패 소멸" 팁 제거 (2026-05-17).
+    # 해당 메커니즘은 패치로 사라진 구식 룰 — 포탑 방패는 영구 소멸하지 않는다.
     if 1170 < game_time < 1260:
         return "🟣 20분 — 바론 시야 장악 준비!"
     return ""  # 기본 팁 제거 — 의미 없는 반복 TTS 방지

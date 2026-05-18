@@ -49,9 +49,11 @@ class YoloCoachThread(QThread):
     def __init__(self):
         super().__init__()
         self.running = True
-        self._manual_request = threading.Event()
         self._latest_frame   = None
         self._frame_lock     = threading.Lock()
+        # [RISK] 콘솔 로그 throttle (초). 매 프레임 찍지 않고 5초당 1회.
+        self._risk_log_interval = 5.0
+        self._last_risk_log_t   = 0.0
         # Live API 에서 수신한 내 챔피언 영문명
         self._my_champ: str  = ""
         self._champ_lock     = threading.Lock()
@@ -82,10 +84,6 @@ class YoloCoachThread(QThread):
         with self._champ_list_lock:
             self._valid_champs = champ_list.copy() if champ_list else set()
         logger.debug(f"[필터링] 유효한 챔피언 목록 갱신: {len(self._valid_champs)}명")
-
-    def request_manual(self) -> None:
-        """F9 핫키 → 수동 피드백."""
-        self._manual_request.set()
 
     # ── 메인 루프 ────────────────────────────────────────────────────────────
     def run(self) -> None:
@@ -156,29 +154,30 @@ class YoloCoachThread(QThread):
                     risk = self._risk_analyzer.calculate_risk(result)
                     self.risk_signal.emit(risk)
 
+                    # ── 위험도 콘솔 로그 (작동 확인용, 5초 throttle) ─────────
+                    # 위험도 계산은 매 프레임 그대로, 콘솔 출력만 self._risk_log_interval
+                    # 초 간격으로 제한. LLM 트리거 시점은 [LLM-TRIGGER]/[LLM-REQ]
+                    # 라인이 별도로 찍히므로 throttle해도 가시성 손실 없음.
+                    now_t = time.perf_counter()
+                    if (now_t - self._last_risk_log_t) >= self._risk_log_interval:
+                        self._last_risk_log_t = now_t
+                        ally_n  = len(result.get("ally", []))
+                        enemy_n = len(result.get("enemy", []))
+                        my_pos  = bbox_center(result.get("my_position"))
+                        my_pos_s = f"({my_pos[0]:.0f},{my_pos[1]:.0f})" if my_pos else "—"
+                        logger.info(
+                            f"[RISK] {risk:5.1f}/100  ally={ally_n} enemy={enemy_n} "
+                            f"my={my_champ or '?'}@{my_pos_s}"
+                        )
+
                     if self._risk_analyzer.should_trigger_alert(risk):
+                        logger.warning(
+                            f"[LLM-TRIGGER] auto  risk={risk:.1f} "
+                            f"(threshold={RISK_AUTO_ALERT}, cooldown={RISK_ALERT_COOLDOWN}s)"
+                        )
                         self._send_llm_feedback(coach, result)
                 except Exception as e:
-                    logger.debug(f"감지/위험도 오류: {e}")
-
-            # 수동 요청 (F9) ─────────────────────────────────────────────
-            if self._manual_request.is_set():
-                self._manual_request.clear()
-                if frame is not None:
-                    try:
-                        with self._champ_list_lock:
-                            valid_champs = self._valid_champs.copy()
-                        result = detector.predict(
-                            frame,
-                            my_champion_name=self._my_champ or None,
-                            valid_champs=valid_champs or None,
-                        )
-                        self._risk_analyzer.reset_cooldown()  # F9: 쿨타임 무시
-                        self._send_llm_feedback(coach, result)
-                    except Exception as e:
-                        self.feedback_signal.emit(f"[오류] Gemini 요청 실패: {e}")
-                else:
-                    self.feedback_signal.emit("[대기 중] 미니맵 캡처 없음")
+                    logger.exception(f"감지/위험도 오류: {e}")
 
             elapsed = time.perf_counter() - t0
             if elapsed < target_dt:
@@ -191,10 +190,13 @@ class YoloCoachThread(QThread):
 
     # ── 헬퍼 ─────────────────────────────────────────────────────────────────
     def _send_llm_feedback(self, coach, result: dict) -> None:
-        """Gemini에 현재 상황을 보내고 피드백을 시그널로 전달."""
+        """Gemini에 현재 상황을 보내고 피드백을 시그널로 전달.
+
+        자동 호출은 risk≥RISK_AUTO_ALERT 임계에서만 트리거된다.
+        """
+        import json as _json
+
         # 위험도 점수/레벨을 LLM에 명시적으로 전달 → 톤 차별화 가능 (v2.1)
-        # 자동 호출은 risk≥RISK_AUTO_ALERT(65)에서만 트리거되지만, 수동(F9)도
-        # 같은 경로를 쓰므로 0~100 전 구간 매핑.
         risk = float(getattr(self._risk_analyzer, "last_risk", 0.0))
         if risk < 31:
             risk_level = "낮음"
@@ -222,14 +224,46 @@ class YoloCoachThread(QThread):
         }
         with self._frame_lock:
             frame_snap = self._latest_frame
+        # frame_snap 은 MinimapCapturer.grab() 결과 = numpy ndarray (BGR, H×W×C).
+        # PIL.Image.size 는 (w,h) 튜플이지만 ndarray.size 는 총 원소수(int) 라
+        # 과거 코드 `frame_snap.size[0]` 가 TypeError 를 일으켰음 — shape 으로 교체.
+        if frame_snap is None:
+            frame_info = "None"
+        elif hasattr(frame_snap, "shape") and len(frame_snap.shape) >= 2:
+            frame_info = f"{frame_snap.shape[1]}x{frame_snap.shape[0]}"
+        elif hasattr(frame_snap, "size") and isinstance(frame_snap.size, tuple):
+            frame_info = f"{frame_snap.size[0]}x{frame_snap.size[1]}"
+        else:
+            frame_info = "unknown"
+
+        # ── 요청 payload 콘솔 출력 (전문) ──────────────────────────────────────
+        logger.info(
+            f"[LLM-REQ] risk={risk:.1f} ({risk_level})  frame={frame_info}"
+        )
+        try:
+            payload_str = _json.dumps(summary, indent=2, ensure_ascii=False, default=str)
+        except Exception:
+            payload_str = repr(summary)
+        logger.info(f"[LLM-REQ] payload:\n{payload_str}")
+
+        t_start = time.perf_counter()
         try:
             text = coach.get_feedback(summary, frame_snap)
+            dt_ms = (time.perf_counter() - t_start) * 1000
+            n_chars = len(text or "")
+            logger.success(
+                f"[LLM-RESP] OK  {dt_ms:6.0f}ms  ({n_chars} chars)"
+            )
+            logger.info(f"[LLM-RESP] full text:\n{text or '[empty]'}")
             self.feedback_signal.emit(text or "[응답 없음]")
         except Exception as e:
+            dt_ms = (time.perf_counter() - t_start) * 1000
             msg = str(e).lower()
             if "timeout" in msg or "deadline" in msg or "504" in msg:
+                logger.error(f"[LLM-RESP] TIMEOUT after {dt_ms:.0f}ms: {e}")
                 self.feedback_signal.emit("[지연] LLM 응답 지연 — 곧 재시도합니다")
             else:
+                logger.exception(f"[LLM-RESP] FAILED after {dt_ms:.0f}ms: {e}")
                 self.feedback_signal.emit(f"[오류] Gemini 요청 실패: {e}")
 
     def stop(self) -> None:

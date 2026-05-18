@@ -47,8 +47,26 @@ def _setup_logger() -> None:
     logger.remove()
     # PyInstaller windowed 모드(console=False)에서는 sys.stderr 가 None.
     # 콘솔이 살아 있을 때만 stderr sink 등록 — 그 외에는 파일 로그만.
+    #
+    # 작동 테스트/녹화 시: `python main.py` 로 dev 실행하면 콘솔이 자동으로 연결되어
+    #   [RISK] 매 프레임 위험도
+    #   [LLM-TRIGGER] 자동 호출 트리거 (risk≥임계 + 쿨타임 OK)
+    #   [LLM-REQ]  요청 payload 전문
+    #   [LLM-RESP] 응답 소요시간 + 응답 전문
+    # 라인이 실시간으로 보입니다.
     if sys.stderr is not None:
-        logger.add(sys.stderr, level="INFO")
+        logger.add(
+            sys.stderr,
+            level="DEBUG",
+            format=(
+                "<green>{time:HH:mm:ss.SSS}</green> "
+                "| <level>{level: <8}</level> "
+                "| <cyan>{message}</cyan>"
+            ),
+            colorize=True,
+            backtrace=False,
+            diagnose=False,
+        )
     logger.add(
         str(log_dir / "integrated_poc.log"),
         level="DEBUG", rotation="10 MB", retention=3,

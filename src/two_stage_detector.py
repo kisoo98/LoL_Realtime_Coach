@@ -178,6 +178,16 @@ class TwoStageDetectorV2:
 
         names = self.classifier.names
 
+        # ── 진단 로그 (enemy=0 원인 추적용, 2026-05-17) ───────────────────────
+        # 박스 단위로 (team, top1_name, conf, valid_champs 통과 여부) 를 모은 뒤
+        # 한 줄로 출력. 필터링 단계에서 누가 빠지는지 시각적으로 보임.
+        try:
+            from loguru import logger as _dbg_log
+        except Exception:
+            _dbg_log = None
+        _debug_rows = []
+        # ────────────────────────────────────────────────────────────────────
+
         for bbox, team, res in zip(boxes_xyxy, teams, cls_results):
             probs = res.probs
             top1_idx = int(probs.top1)
@@ -185,7 +195,9 @@ class TwoStageDetectorV2:
             top1_name = names.get(top1_idx, str(top1_idx))
 
             # 🔥 필터링: valid_champs 에 포함되지 않은 챔피언은 스킵
-            if valid_champs and top1_name not in valid_champs:
+            passes_filter = not (valid_champs and top1_name not in valid_champs)
+            _debug_rows.append((team, top1_name, top1_conf, passes_filter))
+            if not passes_filter:
                 continue
 
             score = 0.0
@@ -207,6 +219,22 @@ class TwoStageDetectorV2:
                     ally_probs.append(probs_np.astype(np.float32))
             else:
                 enemy.append(box)
+
+        # ── 진단 로그 출력 (한 줄 요약, 디버그 레벨) ─────────────────────────
+        if _dbg_log is not None and _debug_rows:
+            ally_cnt = sum(1 for r in _debug_rows if r[0] == "ally")
+            enemy_cnt = sum(1 for r in _debug_rows if r[0] == "enemy")
+            kept = sum(1 for r in _debug_rows if r[3])
+            dropped = sum(1 for r in _debug_rows if not r[3])
+            rows_str = " ".join(
+                f"{t}/{n}({c:.2f}){'' if ok else '×'}"
+                for (t, n, c, ok) in _debug_rows
+            )
+            _dbg_log.debug(
+                f"[DETECT] boxes={len(_debug_rows)} teams(ally/enemy)={ally_cnt}/{enemy_cnt} "
+                f"filter(keep/drop)={kept}/{dropped} | {rows_str}"
+            )
+        # ────────────────────────────────────────────────────────────────────
 
         # 6) [모델 1] my_position: ally 박스 중 my_champ 점수 최대
         my_position = None

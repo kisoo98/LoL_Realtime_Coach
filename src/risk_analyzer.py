@@ -179,7 +179,3 @@ class RiskAnalyzer:
             self._last_alert_t = now
             return True
         return False
-
-    def reset_cooldown(self) -> None:
-        """Force-reset cooldown (e.g. after manual F9 request)."""
-        self._last_alert_t = 0.0

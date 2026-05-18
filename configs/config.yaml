@@ -12,7 +12,7 @@ app:
 
 capture:
   # 본인 모니터 해상도에 맞춰 active_resolution 만 바꾸면 됩니다.
-  active_resolution: "2560x1440"
+  active_resolution: "1920x1080"
   resolutions:
     "1920x1080":
       minimap_bbox: [1625, 815, 1920, 1080]
@@ -25,7 +25,7 @@ yolo:
   model_path: "models/best.pt"
   conf_threshold: 0.35
   iou_threshold: 0.5
-  device: "cuda"   # GPU 없으므로 CPU 모드 사용
+  device: "cpu"   # GPU 없으므로 CPU 모드 사용
   classes:
    - minimap
    - ORDER

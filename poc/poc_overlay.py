@@ -113,8 +113,7 @@ class LiveAPIThread(QThread):
                     coaching_tip = f"💡 전술 팁: {int(current_gold)} 골드로 라인전을 압박할 하위템을 구매하세요."
                 elif game_time < 100:
                     coaching_tip = "초반 시야 장악을 준비하세요. 적 정글 위치 파악이 중요합니다."
-                elif 840 < game_time < 900:
-                    coaching_tip = "⏰ 곧 14분입니다. 타워 방패가 소멸되니 굴려놓은 이득을 수거하세요!"
+                # 14분 포탑방패 소멸 팁 제거 (2026-05-17, 패치로 사라진 구식 룰).
                 elif 1140 < game_time < 1500:
                     coaching_tip = "🐉 20분이 다가옵니다. 바론 시야를 장악할 준비를 하세요!"
                 else:
