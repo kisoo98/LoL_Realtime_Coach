@@ -1,180 +1,115 @@
 # LoL Realtime Coach
 
-LoL 게임 중 미니맵을 실시간 분석해 위험 상황을 코칭해주는 오버레이 앱.
-
-> **버전**: Demo v0.1  
-> **상태**: 팀 내부 테스트용 (feature/poc-integration)  
-> **외부 마감**: 2026-05-18
+> LoL 게임 중 미니맵을 실시간 분석해 위험 상황을 음성으로 알려주는 AI 코칭 오버레이
 
 ---
 
-## 주요 기능 (Demo v0.1)
+## 다운로드
 
-- **YOLO 미니맵 감지** — 실시간 캡처 + 챔피언 아이콘 인식 (172개 챔피언)
-- **팀 분류** — HSV 링 색 분석으로 아군/적군 자동 구분 (정확도 98.86%)
-- **위험도 산정 v2.1** — 거리 + 수치 우위 + 집중도 + 신뢰도 멀티팩터 (0~100점)
-- **Gemini LLM 코칭** — 위험도 ≥ 65 시 자동 호출 (10초 쿨타임)
-- **음성 TTS** — gTTS 기반 한국어 코칭 음성
-- **Live Client API** — 내 챔피언/10명 목록 자동 수신
+**[📥 LoLCoach_v1.0.zip 다운로드 (Google Drive)](https://drive.google.com/file/d/1zYvzfqWwvfods8qvHTzfc3dLLXniNg8t/view?usp=sharing)**
+
+> 별도 설치 없이 압축 해제 후 바로 실행됩니다.
 
 ---
 
-## 팀원 셋업 가이드
+## 주요 기능
 
-### 필요 사항
+- **실시간 미니맵 분석** — AI가 미니맵을 감지해 적 챔피언 위치를 추적
+- **자동 위험도 감지** — 내 위치 기준 위험도를 0~100점으로 실시간 산정
+- **AI 음성 코칭** — 위험도가 높아지면 자동으로 한국어 음성 코칭 제공
+- **게임 정보 연동** — Live Client API로 현재 게임의 챔피언 정보 자동 수신
+- **비침투형 오버레이** — 게임 화면 위에 얇게 표시, 게임 플레이 방해 없음
 
-- Windows 10/11
-- [Miniconda](https://docs.conda.io/en/latest/miniconda.html) 또는 Anaconda
-- Gemini API Key ([무료 발급](https://aistudio.google.com/app/apikey))
-- 모델 파일 (`models/` 폴더) — 기수에게 요청
+---
 
-### 1. 저장소 클론
+## 시작하기
 
-```bash
-git clone https://github.com/<org>/LoL_Realtime_Coach.git
-cd LoL_Realtime_Coach
-git checkout feature/poc-integration
-```
+### 1단계 — Gemini API Key 발급 (무료)
 
-### 2. Conda 환경 생성
+1. [Google AI Studio](https://aistudio.google.com/app/apikey) 접속
+2. **Get API Key** 클릭 후 키 복사
 
-```bash
-conda create -n lolcoach python=3.11 -y
-conda activate lolcoach
-pip install PyQt6 ultralytics loguru gtts pygame keyboard requests opencv-python
-pip install "google-generativeai>=0.8"
-```
+### 2단계 — 압축 해제
 
-> **주의**: 반드시 `lolcoach` 환경에서 실행하세요. base 환경은 PyQt6 DLL 충돌 발생.
-
-### 3. 환경 변수 설정
-
-```bash
-cp .env.example .env
-```
-
-`.env` 파일을 열어 Gemini API Key 입력:
+다운로드한 `LoLCoach_v1.0.zip`을 원하는 폴더에 압축 해제합니다.
 
 ```
-GEMINI_API_KEY=your-actual-key-here
+LoLCoach/
+  LoLCoach.exe   ← 실행 파일
+  configs/
+    config.yaml  ← 설정 파일
+  models/        ← AI 모델 (포함됨)
 ```
 
-### 4. 모델 파일 배치
+### 3단계 — API Key 설정
 
-`models/` 폴더에 다음 파일이 있어야 합니다:
+`configs/config.yaml`을 메모장으로 열고 아래 항목을 수정합니다:
 
+```yaml
+gemini:
+  api_key: "여기에_발급받은_키_입력"
 ```
-models/
-  best.pt     # A' 모델 (챔피언 위치 감지)
-  champion_classifier.pt      # B 모델 (챔피언 분류)
-```
 
-파일이 없으면 기수(황기수)에게 공유 요청.
-
-### 5. 미니맵 좌표 설정
-
-`configs/config.yaml`에서 본인 모니터 해상도 확인:
+### 4단계 — 해상도 확인 (기본값: 1920x1080)
 
 ```yaml
 capture:
-  active_resolution: "1920x1080"   # 본인 해상도로 변경
+  active_resolution: "1920x1080"   # 본인 모니터 해상도로 변경
 ```
 
-지원 해상도: `1920x1080`, `2560x1440`, `3840x2160`
+지원 해상도: `1920x1080` / `2560x1440` / `3840x2160`
+
+### 5단계 — 실행
+
+LoL 게임을 시작한 후 `LoLCoach.exe`를 실행하세요.
 
 ---
 
-## 실행
+## 사용 방법
 
-```bash
-conda activate lolcoach
-cd LoL_Realtime_Coach
-python main.py
-```
+1. LoL 게임 실행
+2. `LoLCoach.exe` 실행
+3. 인게임 진입 후 자동으로 미니맵 분석 시작
+4. 위험도가 높아지면 자동으로 음성 코칭 재생
 
 ### 핫키
 
 | 키 | 기능 |
 |---|---|
+| **Ctrl+Shift+C** | 컨트롤러 패널 토글 (볼륨 조절 등) |
 | **Ctrl+Shift+Q** | 앱 종료 |
-| **Ctrl+Shift+C** | 인게임 컨트롤러 패널 토글 |
 
-LLM 코칭은 위험도(0~100)가 자동 알림 임계를 넘고 쿨타임이 풀린 순간에만 자동으로 호출됩니다.
+---
+
+## 위험도 기준
+
+| 범위 | 상태 | 음성 코칭 |
+|------|------|---------|
+| 0 ~ 30 | 🟢 안전 | — |
+| 31 ~ 65 | 🟡 주의 | — |
+| 66 ~ 100 | 🔴 위험 | 자동 재생 (10초 쿨타임) |
 
 ---
 
 ## 동작 조건
 
-- LoL 게임이 **실행 중**이어야 합니다 (Live Client API 자동 연결)
-- 미니맵이 화면 **우측 하단**에 있어야 합니다 (기본 설정)
-- 게임이 없으면 YOLO 감지는 동작하지만 내 챔피언 정보는 없음
+- **OS**: Windows 10 / 11
+- **게임**: LoL 실행 중이어야 합니다 (챔피언 정보 자동 연동)
+- **미니맵**: 화면 우측 하단 기본 위치 유지
+- **인터넷**: Gemini AI 코칭 기능 사용 시 필요
 
 ---
 
-## 위험도 계산 기준 (v2.1)
+## 자주 묻는 질문
 
-| 범위 | 상태 | LLM 호출 |
-|------|------|---------|
-| 0~30 | 🟢 안전 | X |
-| 31~65 | 🟡 주의 | X |
-| 66~100 | 🔴 위험 | O (10초 쿨타임) |
+**Q. 백신 프로그램이 차단해요**  
+A. 화면 캡처 기능 때문에 오탐될 수 있습니다. 예외 처리 후 실행해 주세요.
 
-세부 계산 방식: `LoL_Realtime_Coach_Official_Rules.md` 참고
+**Q. 음성이 안 나와요**  
+A. `configs/config.yaml`에 API Key가 올바르게 입력됐는지 확인해 주세요.
 
----
+**Q. 어떤 해상도를 지원하나요?**  
+A. 1920x1080 / 2560x1440 / 3840x2160을 지원합니다.
 
-## 테스트 실행
-
-```bash
-conda activate lolcoach
-cd LoL_Realtime_Coach
-python tests/test_risk_analyzer.py
-```
-
----
-
-## 프로젝트 구조
-
-```
-poc/
-  integrated_main.py       # 진입점 (python main.py)
-  integrated_yolo.py       # YOLO + 위험도 + Gemini 스레드
-  integrated_live.py       # Live Client API 스레드
-  integrated_overlay.py    # PyQt6 오버레이 UI
-  integrated_constants.py  # 상수 정의
-  integrated_helpers.py    # 공통 헬퍼
-  integrated_tips.py       # 규칙 기반 코칭 팁
-  integrated_voice.py      # TTS 스레드
-
-src/
-  risk_analyzer.py         # 위험도 계산 모듈 (v2.1)
-  two_stage_detector.py    # A' + F + B 3단계 파이프라인
-  capture.py               # 미니맵 캡처
-  gemini_client.py         # Gemini API 클라이언트
-  settings.py              # 설정 로더
-
-configs/
-  config.yaml              # 앱 설정 (해상도, LLM 등)
-
-models/
-  lol_minimap_1class_l.pt  # 챔피언 위치 감지 모델
-  champion_classifier.pt   # 챔피언 분류 모델
-
-tests/
-  test_risk_analyzer.py    # 위험도 모듈 단위 테스트
-```
-
----
-
-## 팀
-
-| 이름 | 역할 | 담당 |
-|------|------|------|
-| 황기수 | AI/ML + PM | YOLO 학습, LLM 연동, 아키텍처, 문서화 |
-| 한승우 | 프론트엔드 | 오버레이 UI, 위험도 시각화 |
-| 박창민 | 백엔드 | Riot API 연동 |
-| 김대원 | 데이터 엔지니어 | 미니맵 데이터 수집/라벨링 |
-
----
-
-**공식 규칙 문서**: `LoL_Realtime_Coach_Official_Rules.md`
+**Q. 롤 가드에 걸리나요?**  
+A. 화면 읽기만 수행하며 게임 메모리에 접근하지 않습니다.
